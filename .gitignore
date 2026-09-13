@@ -1,0 +1,33 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+
+# Standalone design-reference prototype (own package.json/tsconfig) — not part of the app, never pushed
+code-sample/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Supabase local dev
+supabase/.branches
+supabase/.temp

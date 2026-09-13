@@ -1,0 +1,84 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark-first premium theme (replaces the earlier light "warm luxury"
+     palette) — flips native form controls (date/time pickers, range slider)
+     to dark rendering so they don't clash with the app around them. */
+  color-scheme: dark;
+
+  /* Solid colors are stored as "R G B" triples so Tailwind's
+     rgb(var(--x) / <alpha-value>) pattern can apply opacity modifiers
+     (bg-surface/60, etc). Colors that are already translucent (borders,
+     glow) or composite (gradient, shadows) are stored as full CSS values. */
+  --c-bg: 16 8 23; /* #100817 */
+  --c-bg-2: 25 11 36; /* #190B24 */
+  --c-bg-3: 9 5 14; /* #09050E */
+  --c-surface: 33 16 47; /* #21102F */
+  --c-surface-2: 39 18 55; /* #271237 */
+  --c-surface-elevated: 48 21 66; /* #301542 */
+  --c-surface-elevated-2: 53 22 74; /* #35164A */
+
+  --c-primary: 168 60 255; /* #A83CFF */
+  --c-primary-light: 180 124 255; /* #B47CFF */
+  --c-secondary: 155 108 255; /* #9B6CFF */
+
+  --c-text-primary: 255 255 255; /* #FFFFFF */
+  --c-text-secondary: 185 170 189; /* #B9AABD */
+  --c-text-muted: 128 110 136; /* #806E88 */
+
+  --c-success: 82 214 160; /* #52D6A0 */
+  --c-warning: 232 180 90; /* #E8B45A */
+  --c-error: 240 106 131; /* #F06A83 */
+
+  --color-border: rgba(190, 90, 255, 0.2);
+  --color-border-active: rgba(220, 55, 220, 0.55);
+  --color-glow: rgba(211, 43, 220, 0.25);
+
+  --gradient-cta: linear-gradient(90deg, #8b32e8 0%, #d92bc7 50%, #f03cc6 100%);
+
+  --shadow-card: 0 12px 35px rgba(0, 0, 0, 0.3);
+  --shadow-primary: 0 8px 24px rgba(218, 43, 199, 0.25);
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(178, 49, 216, 0.18), transparent 38%),
+    linear-gradient(180deg, #190b24 0%, #100817 55%, #09050e 100%) fixed;
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+/* Hides the scrollbar on horizontally-scrollable rows (e.g. the Specialized
+   Mission Agents row) while keeping them touch/wheel-scrollable — a visible
+   scrollbar track there reads as a stray UI artifact, not a real control. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Leaflet ships light-themed chrome by default (leaflet/dist/leaflet.css);
+   only the popup/container chrome needs overriding — the CARTO dark tile
+   layer itself (see MapPage.tsx) already matches the app's theme. */
+.leaflet-container {
+  background: #21102f;
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #301542;
+  color: #ffffff;
+}
+.leaflet-popup-content-wrapper a {
+  color: #b47cff;
+}
+
