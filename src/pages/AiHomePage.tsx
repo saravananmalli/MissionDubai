@@ -177,30 +177,25 @@ export default function AiHomePage() {
         {/* 1. Hero Card */}
         <section
           className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#24173D] to-[#160E28] border border-[#523385]/60 p-5 shadow-[0_12px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)]"
-          aria-label="Active UAE Odyssey"
+          aria-label="Mission overview"
         >
           <div className="absolute top-0 right-0 w-44 h-44 bg-[#EC4899]/15 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="flex items-center justify-between mb-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#352156]/90 border border-purple-400/30 text-xs font-semibold text-purple-200">
-              <span>🚀</span>
-              <span className="tracking-wide">ACTIVE UAE ODYSSEY</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-pink-300 font-medium">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h1
+              className="text-2xl sm:text-[28px] font-black tracking-tight leading-tight text-white"
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              Your Dubai Mission. <br />
+              <span className="bg-gradient-to-r from-[#EC4899] via-[#F472B6] to-[#A855F7] bg-clip-text text-transparent">
+                Guided by AI.
+              </span>
+            </h1>
+            <div className="flex items-center gap-1.5 text-xs text-pink-300 font-medium shrink-0 pt-1.5">
               <span className={`w-2 h-2 rounded-full bg-[#EC4899] ${isOnline ? 'animate-pulse' : ''}`} />
               <span>{isOnline ? 'Live Sync' : 'Offline'}</span>
             </div>
           </div>
-
-          <h1
-            className="text-2xl sm:text-[28px] font-black tracking-tight leading-tight text-white mb-1"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            Your Dubai Mission. <br />
-            <span className="bg-gradient-to-r from-[#EC4899] via-[#F472B6] to-[#A855F7] bg-clip-text text-transparent">
-              Guided by AI.
-            </span>
-          </h1>
           <p className="text-xs text-zinc-300 font-medium mb-4">
             Day {state.progress.daysElapsed} of {state.progress.totalDays}
             {state.visa && ` • ${Math.max(state.visa.daysUntilExpiry, 0)} Days Remaining on Visa`}
