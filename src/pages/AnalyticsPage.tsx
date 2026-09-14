@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChatFlow } from '@/chat-flow';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
-import { PageHeader } from '@/components/PageHeader';
+import { SecondaryPageHeader } from '@/components/SecondaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/Button';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
@@ -37,21 +37,27 @@ export default function AnalyticsPage() {
   const offersQuery = useOffers(tripQuery.data?.id);
   const [isAddingOffer, setIsAddingOffer] = useState(false);
   useScrollToHash(Boolean(tripQuery.data));
+  const header = <SecondaryPageHeader title="Analytics & Offers" />;
 
   if (tripQuery.isLoading) {
     return (
-      <main className="px-4 py-6">
-        <p role="status">Loading…</p>
-      </main>
+      <>
+        {header}
+        <main className="px-4 py-6">
+          <p role="status">Loading…</p>
+        </main>
+      </>
     );
   }
 
   if (tripQuery.isError) {
     return (
-      <main className="flex flex-col gap-4 px-4 py-6">
-        <PageHeader title="Analytics & Offers" />
-        <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
-      </main>
+      <>
+        {header}
+        <main className="flex flex-col gap-4 px-4 py-6">
+          <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
+        </main>
+      </>
     );
   }
 
@@ -140,9 +146,9 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-6">
-      <PageHeader title="Analytics & Offers" />
-
+    <>
+      {header}
+      <main className="flex flex-col gap-4 px-4 py-6">
       {journeyProgress && (
         <Card title="Journey Progress">
           <p className="text-base font-medium text-text-primary">
@@ -243,6 +249,7 @@ export default function AnalyticsPage() {
           + Add Offer
         </PrimaryButton>
       )}
-    </main>
+      </main>
+    </>
   );
 }

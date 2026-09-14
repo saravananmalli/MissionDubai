@@ -32,9 +32,15 @@ export function AppHeader({ onBack, title, subtitle, unreadCount, onNotification
           <DubaiNeonBadge size="md" />
         )}
         <div className="min-w-0">
-          <div className="truncate text-base font-bold tracking-tight text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            {title}
-          </div>
+          {onBack ? (
+            <h1 className="truncate text-base font-bold tracking-tight text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {title}
+            </h1>
+          ) : (
+            <div className="truncate text-base font-bold tracking-tight text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {title}
+            </div>
+          )}
           {subtitle && <div className="truncate text-[11px] font-medium text-zinc-400">{subtitle}</div>}
         </div>
       </div>

@@ -5,7 +5,7 @@ import 'react-day-picker/style.css';
 import { ChatFlow } from '@/chat-flow';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
-import { PageHeader } from '@/components/PageHeader';
+import { SecondaryPageHeader } from '@/components/SecondaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/Button';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
@@ -24,21 +24,27 @@ export default function InterviewCalendarPage() {
   const applicationsQuery = useApplications(tripQuery.data?.id);
   const interviewsQuery = useInterviews(tripQuery.data?.id);
   const [isScheduling, setIsScheduling] = useState(false);
+  const header = <SecondaryPageHeader title="Interview Calendar" />;
 
   if (tripQuery.isLoading || applicationsQuery.isLoading) {
     return (
-      <main className="px-4 py-6">
-        <p role="status">Loading…</p>
-      </main>
+      <>
+        {header}
+        <main className="px-4 py-6">
+          <p role="status">Loading…</p>
+        </main>
+      </>
     );
   }
 
   if (tripQuery.isError) {
     return (
-      <main className="flex flex-col gap-4 px-4 py-6">
-        <PageHeader title="Interview Calendar" />
-        <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
-      </main>
+      <>
+        {header}
+        <main className="flex flex-col gap-4 px-4 py-6">
+          <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
+        </main>
+      </>
     );
   }
 
@@ -53,47 +59,48 @@ export default function InterviewCalendarPage() {
   }
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-6">
-      <PageHeader title="Interview Calendar" />
+    <>
+      {header}
+      <main className="flex flex-col gap-4 px-4 py-6">
+        <div className="rounded-2xl border border-ink-100 bg-cream-100 p-3 shadow-sm">
+          <DayPicker
+            modifiers={{ interview: interviewDates }}
+            modifiersClassNames={{ interview: 'bg-primary text-white rounded-full' }}
+            style={CALENDAR_THEME_VARS}
+          />
+        </div>
 
-      <div className="rounded-2xl border border-ink-100 bg-cream-100 p-3 shadow-sm">
-        <DayPicker
-          modifiers={{ interview: interviewDates }}
-          modifiersClassNames={{ interview: 'bg-primary text-white rounded-full' }}
-          style={CALENDAR_THEME_VARS}
-        />
-      </div>
+        {interviewsQuery.isError && (
+          <ErrorState
+            message="Couldn't load your interviews. Check your connection and try again."
+            onRetry={() => void interviewsQuery.refetch()}
+          />
+        )}
 
-      {interviewsQuery.isError && (
-        <ErrorState
-          message="Couldn't load your interviews. Check your connection and try again."
-          onRetry={() => void interviewsQuery.refetch()}
-        />
-      )}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-500">Upcoming Interviews</h2>
+          {interviews.length === 0 && <EmptyState message="No interviews scheduled yet." />}
+          {interviews.map((interview) => (
+            <Link key={interview.id} to={`/interviews/${interview.id}`} className="block">
+              <Card title={interview.companyName}>
+                <p className="text-sm text-ink-500">
+                  {interview.interview_date} @ {interview.interview_time} · {interview.type.replace('_', ' ')}
+                </p>
+              </Card>
+            </Link>
+          ))}
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-500">Upcoming Interviews</h2>
-        {interviews.length === 0 && <EmptyState message="No interviews scheduled yet." />}
-        {interviews.map((interview) => (
-          <Link key={interview.id} to={`/interviews/${interview.id}`} className="block">
-            <Card title={interview.companyName}>
-              <p className="text-sm text-ink-500">
-                {interview.interview_date} @ {interview.interview_time} · {interview.type.replace('_', ' ')}
-              </p>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {applications.length === 0 ? (
-        <EmptyState message="Add a job application first before scheduling an interview." />
-      ) : isScheduling ? (
-        <ChatFlow flow={scheduleFlow} onFinished={handleFinished} />
-      ) : (
-        <PrimaryButton type="button" onClick={() => setIsScheduling(true)} className="self-start">
-          + Schedule Interview
-        </PrimaryButton>
-      )}
-    </main>
+        {applications.length === 0 ? (
+          <EmptyState message="Add a job application first before scheduling an interview." />
+        ) : isScheduling ? (
+          <ChatFlow flow={scheduleFlow} onFinished={handleFinished} />
+        ) : (
+          <PrimaryButton type="button" onClick={() => setIsScheduling(true)} className="self-start">
+            + Schedule Interview
+          </PrimaryButton>
+        )}
+      </main>
+    </>
   );
 }

@@ -18,7 +18,7 @@ import {
 import { ChatFlow } from '@/chat-flow';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
-import { PageHeader } from '@/components/PageHeader';
+import { PrimaryPageHeader } from '@/components/PrimaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/Button';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
@@ -119,18 +119,23 @@ export default function ExpensesPage() {
 
   if (tripQuery.isLoading) {
     return (
-      <main className="px-4 py-6">
-        <p role="status">Loading…</p>
-      </main>
+      <>
+        <PrimaryPageHeader />
+        <main className="px-4 py-6">
+          <p role="status">Loading…</p>
+        </main>
+      </>
     );
   }
 
   if (tripQuery.isError) {
     return (
-      <main className="flex flex-col gap-4 px-4 py-6">
-        <PageHeader title="Financial Pulse & Wealth Runway" />
-        <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
-      </main>
+      <>
+        <PrimaryPageHeader />
+        <main className="flex flex-col gap-4 px-4 py-6">
+          <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
+        </main>
+      </>
     );
   }
 
@@ -176,18 +181,17 @@ export default function ExpensesPage() {
   }
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-6 pb-10">
-      <PageHeader
-        title="Financial Pulse & Wealth Runway"
-        action={
+    <>
+      <PrimaryPageHeader />
+      <main className="flex flex-col gap-4 px-4 py-6 pb-10">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-text-secondary">Burn analytics for the rest of your trip.</p>
           <Link to="/financial-report" className="text-sm text-text-secondary underline hover:text-primary-light">
             Full Report
           </Link>
-        }
-      />
-      <p className="-mt-2 text-sm text-text-secondary">Burn analytics for the rest of your trip.</p>
+        </div>
 
-      <Card title="Allocated Vault">
+        <Card title="Allocated Vault">
         {budgetQuery.data ? (
           <div className="flex flex-col items-center gap-4">
             <div className="relative flex items-center justify-center">
@@ -344,13 +348,14 @@ export default function ExpensesPage() {
         })}
       </div>
 
-      {isAddingExpense ? (
-        <ChatFlow flow={expenseFlow} onFinished={handleExpenseFinished} />
-      ) : (
-        <PrimaryButton type="button" onClick={() => setIsAddingExpense(true)} className="self-start">
-          + Log Expense in 20s
-        </PrimaryButton>
-      )}
-    </main>
+        {isAddingExpense ? (
+          <ChatFlow flow={expenseFlow} onFinished={handleExpenseFinished} />
+        ) : (
+          <PrimaryButton type="button" onClick={() => setIsAddingExpense(true)} className="self-start">
+            + Log Expense in 20s
+          </PrimaryButton>
+        )}
+      </main>
+    </>
   );
 }

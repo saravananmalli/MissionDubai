@@ -29,7 +29,7 @@ async function addOffer(
   await page.getByRole('button', { name: 'Send' }).click();
   await page.getByRole('button', { name: 'Skip' }).first().click(); // bonus
   await page.getByRole('button', { name: 'Skip' }).click(); // leave days
-  await page.getByRole('button', { name: 'NO' }).click(); // visa sponsorship
+  await page.getByRole('button', { name: 'NO', exact: true }).click(); // visa sponsorship
   await page.getByRole('button', { name: 'Skip' }).click(); // location
   await page.getByRole('button', { name: growth }).click();
 }

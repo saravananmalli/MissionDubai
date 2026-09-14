@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChatFlow } from '@/chat-flow';
 import { ErrorState } from '@/components/ErrorState';
-import { PageHeader } from '@/components/PageHeader';
+import { PrimaryPageHeader } from '@/components/PrimaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/Button';
 import { applicationFlow } from '@/domains/applications/flowConfig';
@@ -19,18 +19,23 @@ export default function ApplicationsPage() {
 
   if (tripQuery.isLoading) {
     return (
-      <main className="px-4 py-6">
-        <p role="status">Loading…</p>
-      </main>
+      <>
+        <PrimaryPageHeader />
+        <main className="px-4 py-6">
+          <p role="status">Loading…</p>
+        </main>
+      </>
     );
   }
 
   if (tripQuery.isError) {
     return (
-      <main className="flex flex-col gap-4 px-4 py-6">
-        <PageHeader title="Applications & Company Visits" />
-        <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
-      </main>
+      <>
+        <PrimaryPageHeader />
+        <main className="flex flex-col gap-4 px-4 py-6">
+          <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
+        </main>
+      </>
     );
   }
 
@@ -43,11 +48,12 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-6">
-      <PageHeader
-        title="Applications & Company Visits"
-        action={
-          <div className="flex gap-3 pt-1 text-sm text-text-secondary">
+    <>
+      <PrimaryPageHeader />
+      <main className="flex flex-col gap-4 px-4 py-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold text-text-primary">Applications & Company Visits</h1>
+          <div className="flex gap-3 text-sm text-text-secondary">
             <Link to="/photos" className="underline hover:text-primary-light">
               Photos
             </Link>
@@ -55,31 +61,31 @@ export default function ApplicationsPage() {
               Interviews
             </Link>
           </div>
-        }
-      />
+        </div>
 
-      {applicationsQuery.isError && (
-        <ErrorState
-          message="Couldn't load your applications. Check your connection and try again."
-          onRetry={() => void applicationsQuery.refetch()}
-        />
-      )}
+        {applicationsQuery.isError && (
+          <ErrorState
+            message="Couldn't load your applications. Check your connection and try again."
+            onRetry={() => void applicationsQuery.refetch()}
+          />
+        )}
 
-      {applications.length === 0 && !isAddingApplication && (
-        <EmptyState message="No applications yet — add your first one below." />
-      )}
+        {applications.length === 0 && !isAddingApplication && (
+          <EmptyState message="No applications yet — add your first one below." />
+        )}
 
-      {applications.map((application) => (
-        <ApplicationCard key={application.id} application={application} onVisitAdded={() => void applicationsQuery.refetch()} />
-      ))}
+        {applications.map((application) => (
+          <ApplicationCard key={application.id} application={application} onVisitAdded={() => void applicationsQuery.refetch()} />
+        ))}
 
-      {isAddingApplication ? (
-        <ChatFlow flow={applicationFlow} onFinished={handleFinished} />
-      ) : (
-        <PrimaryButton type="button" onClick={() => setIsAddingApplication(true)} className="self-start">
-          + Add Application
-        </PrimaryButton>
-      )}
-    </main>
+        {isAddingApplication ? (
+          <ChatFlow flow={applicationFlow} onFinished={handleFinished} />
+        ) : (
+          <PrimaryButton type="button" onClick={() => setIsAddingApplication(true)} className="self-start">
+            + Add Application
+          </PrimaryButton>
+        )}
+      </main>
+    </>
   );
 }

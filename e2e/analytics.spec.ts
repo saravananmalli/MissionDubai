@@ -29,7 +29,7 @@ async function addOffer(
   await page.getByRole('button', { name: 'Send' }).click();
   await page.getByRole('button', { name: 'Skip' }).first().click();
   await page.getByRole('button', { name: 'Skip' }).click();
-  await page.getByRole('button', { name: 'NO' }).click();
+  await page.getByRole('button', { name: 'NO', exact: true }).click();
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByRole('button', { name: growth }).click();
 }

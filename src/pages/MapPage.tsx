@@ -2,7 +2,7 @@ import 'leaflet/dist/leaflet.css';
 import '@/lib/leafletIconFix';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import { Card } from '@/components/Card';
-import { PageHeader } from '@/components/PageHeader';
+import { SecondaryPageHeader } from '@/components/SecondaryPageHeader';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
 import { useTravelSummary } from '@/domains/travel/api';
 import { useApplications } from '@/domains/applications/api';
@@ -36,56 +36,57 @@ export default function MapPage() {
   const center: [number, number] = accommodationPin ? [accommodationPin.lat, accommodationPin.lng] : DUBAI_CENTER;
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-6">
-      <PageHeader title="Map View" />
+    <>
+      <SecondaryPageHeader title="Map View" />
+      <main className="flex flex-col gap-4 px-4 py-6">
+        <Card title="Map">
+          <div className="h-72 w-full overflow-hidden rounded-md">
+            <MapContainer center={center} zoom={11} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {accommodationPin && (
+                <Marker position={[accommodationPin.lat, accommodationPin.lng]}>
+                  <Popup>{accommodationPin.name}</Popup>
+                </Marker>
+              )}
+              {visitPins.map((pin) => (
+                <Marker key={pin.id} position={[pin.lat, pin.lng]}>
+                  <Popup>
+                    {pin.companyName} — {pin.visitDate}
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+          {markerCount === 0 && (
+            <p className="mt-2 text-sm text-text-secondary">
+              No saved locations yet — PG and company-visit coordinates aren't captured by the chat flows yet, so the map centers
+              on Dubai for now.
+            </p>
+          )}
+        </Card>
 
-      <Card title="Map">
-        <div className="h-72 w-full overflow-hidden rounded-md">
-          <MapContainer center={center} zoom={11} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {accommodationPin && (
-              <Marker position={[accommodationPin.lat, accommodationPin.lng]}>
-                <Popup>{accommodationPin.name}</Popup>
-              </Marker>
-            )}
-            {visitPins.map((pin) => (
-              <Marker key={pin.id} position={[pin.lat, pin.lng]}>
-                <Popup>
-                  {pin.companyName} — {pin.visitDate}
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-        </div>
-        {markerCount === 0 && (
-          <p className="mt-2 text-sm text-text-secondary">
-            No saved locations yet — PG and company-visit coordinates aren't captured by the chat flows yet, so the map centers
-            on Dubai for now.
-          </p>
+        {accommodation && (
+          <Card title="PG Accommodation">
+            <p className="text-sm text-text-primary">{accommodation.name}</p>
+            <p className="text-sm text-text-secondary">{accommodation.address}</p>
+          </Card>
         )}
-      </Card>
 
-      {accommodation && (
-        <Card title="PG Accommodation">
-          <p className="text-sm text-text-primary">{accommodation.name}</p>
-          <p className="text-sm text-text-secondary">{accommodation.address}</p>
-        </Card>
-      )}
-
-      {visitPins.length > 0 && (
-        <Card title="Company Visit Locations">
-          <ul className="flex flex-col gap-1 text-sm text-text-secondary">
-            {visitPins.map((pin) => (
-              <li key={pin.id}>
-                {pin.companyName} — {pin.visitDate}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-    </main>
+        {visitPins.length > 0 && (
+          <Card title="Company Visit Locations">
+            <ul className="flex flex-col gap-1 text-sm text-text-secondary">
+              {visitPins.map((pin) => (
+                <li key={pin.id}>
+                  {pin.companyName} — {pin.visitDate}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+      </main>
+    </>
   );
 }

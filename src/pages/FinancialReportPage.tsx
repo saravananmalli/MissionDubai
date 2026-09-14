@@ -1,7 +1,7 @@
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
-import { PageHeader } from '@/components/PageHeader';
+import { SecondaryPageHeader } from '@/components/SecondaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
 import { useBudget, useExpenses } from '@/domains/expenses/api';
@@ -26,21 +26,27 @@ export default function FinancialReportPage() {
   const tripQuery = useCurrentTrip();
   const budgetQuery = useBudget(tripQuery.data?.id);
   const expensesQuery = useExpenses(tripQuery.data?.id);
+  const header = <SecondaryPageHeader title="Financial Report" />;
 
   if (tripQuery.isLoading) {
     return (
-      <main className="px-4 py-6">
-        <p role="status">Loading…</p>
-      </main>
+      <>
+        {header}
+        <main className="px-4 py-6">
+          <p role="status">Loading…</p>
+        </main>
+      </>
     );
   }
 
   if (tripQuery.isError) {
     return (
-      <main className="flex flex-col gap-4 px-4 py-6">
-        <PageHeader title="Financial Report" />
-        <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
-      </main>
+      <>
+        {header}
+        <main className="flex flex-col gap-4 px-4 py-6">
+          <ErrorState message="Couldn't load your trip. Check your connection and try again." onRetry={() => void tripQuery.refetch()} />
+        </main>
+      </>
     );
   }
 
@@ -68,68 +74,69 @@ export default function FinancialReportPage() {
     : null;
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-6">
-      <PageHeader title="Financial Report" />
+    <>
+      {header}
+      <main className="flex flex-col gap-4 px-4 py-6">
+        {expensesQuery.isError && (
+          <ErrorState
+            message="Couldn't load your expenses. Check your connection and try again."
+            onRetry={() => void expensesQuery.refetch()}
+          />
+        )}
 
-      {expensesQuery.isError && (
-        <ErrorState
-          message="Couldn't load your expenses. Check your connection and try again."
-          onRetry={() => void expensesQuery.refetch()}
-        />
-      )}
+        {pieData.length === 0 ? (
+          <EmptyState message="No expenses yet to report on." />
+        ) : (
+          <Card title="Expense Categories">
+            {/* Recharts renders to canvas/SVG with no inherent screen-reader
+                representation; this list is the accessible equivalent of the
+                same data the chart shows visually. */}
+            <ul className="sr-only">
+              {pieData.map((entry) => (
+                <li key={entry.name}>
+                  {entry.name}: {entry.value.toLocaleString()} AED
+                </li>
+              ))}
+            </ul>
+            <ResponsiveContainer width="100%" height={220} aria-hidden="true">
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80} label>
+                  {pieData.map((entry, index) => (
+                    <Cell key={entry.name} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                <Legend wrapperStyle={{ color: '#B9AABD' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </Card>
+        )}
 
-      {pieData.length === 0 ? (
-        <EmptyState message="No expenses yet to report on." />
-      ) : (
-        <Card title="Expense Categories">
-          {/* Recharts renders to canvas/SVG with no inherent screen-reader
-              representation; this list is the accessible equivalent of the
-              same data the chart shows visually. */}
-          <ul className="sr-only">
-            {pieData.map((entry) => (
-              <li key={entry.name}>
-                {entry.name}: {entry.value.toLocaleString()} AED
-              </li>
-            ))}
-          </ul>
-          <ResponsiveContainer width="100%" height={220} aria-hidden="true">
-            <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80} label>
-                {pieData.map((entry, index) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
-                ))}
-              </Pie>
+        <Card title="Budget vs Spent">
+          <p className="sr-only">
+            Budget: {budgetAmount.toLocaleString()} AED. Spent: {totalSpent.toLocaleString()} AED.
+          </p>
+          <ResponsiveContainer width="100%" height={160} aria-hidden="true">
+            <BarChart data={[{ name: 'This trip', Budget: budgetAmount, Spent: totalSpent }]}>
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
+              <XAxis dataKey="name" tick={CHART_AXIS_TICK} />
+              <YAxis tick={CHART_AXIS_TICK} />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend wrapperStyle={{ color: '#B9AABD' }} />
-            </PieChart>
+              <Bar dataKey="Budget" fill="#9B6CFF" />
+              <Bar dataKey="Spent" fill="#A83CFF" />
+            </BarChart>
           </ResponsiveContainer>
         </Card>
-      )}
 
-      <Card title="Budget vs Spent">
-        <p className="sr-only">
-          Budget: {budgetAmount.toLocaleString()} AED. Spent: {totalSpent.toLocaleString()} AED.
-        </p>
-        <ResponsiveContainer width="100%" height={160} aria-hidden="true">
-          <BarChart data={[{ name: 'This trip', Budget: budgetAmount, Spent: totalSpent }]}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
-            <XAxis dataKey="name" tick={CHART_AXIS_TICK} />
-            <YAxis tick={CHART_AXIS_TICK} />
-            <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-            <Legend wrapperStyle={{ color: '#B9AABD' }} />
-            <Bar dataKey="Budget" fill="#9B6CFF" />
-            <Bar dataKey="Spent" fill="#A83CFF" />
-          </BarChart>
-        </ResponsiveContainer>
-      </Card>
-
-      {burnRate && (
-        <Card title="Burn Rate">
-          <p className="text-sm text-text-secondary">Daily Average: {burnRate.dailyAverageAed.toFixed(0)} AED</p>
-          <p className="text-sm text-text-secondary">Budget will last: {burnRate.willBudgetLast ? 'YES ✓' : 'NO ⚠️'}</p>
-          <p className="text-sm text-text-secondary">Estimated left at trip end: {burnRate.estimatedRemainingAed.toFixed(0)} AED</p>
-        </Card>
-      )}
-    </main>
+        {burnRate && (
+          <Card title="Burn Rate">
+            <p className="text-sm text-text-secondary">Daily Average: {burnRate.dailyAverageAed.toFixed(0)} AED</p>
+            <p className="text-sm text-text-secondary">Budget will last: {burnRate.willBudgetLast ? 'YES ✓' : 'NO ⚠️'}</p>
+            <p className="text-sm text-text-secondary">Estimated left at trip end: {burnRate.estimatedRemainingAed.toFixed(0)} AED</p>
+          </Card>
+        )}
+      </main>
+    </>
   );
 }
