@@ -359,7 +359,7 @@ export default function AiHomePage() {
             </div>
             {state.accommodation && (
               <div className="flex items-center justify-between text-[10px] text-zinc-400 mt-2.5">
-                <span>{state.accommodation.checkOutDate ? `Paid to ${state.accommodation.checkOutDate}` : 'Ongoing lease'}</span>
+                <span>{state.accommodation.checkOutDate ? `Paid to ${state.accommodation.checkOutDate}` : 'Ongoing rental'}</span>
                 <span className="text-teal-300 font-semibold">{(state.accommodation.monthlyRentAed / 1000).toFixed(1)}k/m</span>
               </div>
             )}

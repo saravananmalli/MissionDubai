@@ -15,7 +15,6 @@ import {
   Radar,
   Scale,
   Send,
-  ShieldCheck,
   UserPlus,
   type LucideIcon,
 } from 'lucide-react';
@@ -90,7 +89,7 @@ const basecamp: AgentDefinition = {
             <span className="flex items-center gap-1.5 text-zinc-300">
               <BedDouble className="h-3.5 w-3.5 shrink-0 text-purple-300" aria-hidden="true" />
               {state.accommodation.name}
-              {state.accommodation.checkOutDate ? ` · paid to ${state.accommodation.checkOutDate}` : ' · ongoing lease'}
+              {state.accommodation.checkOutDate ? ` · paid to ${state.accommodation.checkOutDate}` : ' · ongoing rental'}
             </span>
             <span className="font-bold text-purple-300">{state.accommodation.monthlyRentAed.toLocaleString()} AED/mo</span>
           </InfoPanel>
@@ -107,21 +106,9 @@ const basecamp: AgentDefinition = {
       </>
     );
   },
-  getActions(state) {
-    // Only show both buttons once both sections actually exist to scroll to — otherwise the "missing" one silently lands on the same page with nothing to show, which reads as the same action twice.
-    if (state.accommodation && state.visa) {
-      return [
-        { kind: 'link', label: 'Manage Lease', icon: Home, to: '/travel#lease' },
-        { kind: 'link', label: 'Visa & Residency', icon: ShieldCheck, to: '/travel#visa' },
-      ];
-    }
-    if (state.accommodation) {
-      return [{ kind: 'link', label: 'Manage Lease', icon: Home, to: '/travel#lease', tone: 'highlight' }];
-    }
-    if (state.visa) {
-      return [{ kind: 'link', label: 'Visa & Residency', icon: ShieldCheck, to: '/travel#visa', tone: 'highlight' }];
-    }
-    return [{ kind: 'link', label: 'Add Travel Details', icon: Home, to: '/travel', tone: 'highlight' }];
+  getActions() {
+    // Both "Manage Rent" and "Visa & Residency" land on the same Travel & Accommodation page — one real destination, one button.
+    return [{ kind: 'link', label: 'Manage Rent & Visa', icon: Home, to: '/travel' }];
   },
 };
 

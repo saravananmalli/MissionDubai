@@ -22,7 +22,7 @@ export function getQuickPrompts(state: JourneyState): QuickPrompt[] {
   if (state.visa && !state.visa.isExpired && state.visa.daysUntilExpiry <= 14) prompts.push({ intent: 'visa', label: 'Visa renewal steps' });
   if (state.pendingOffers.length >= 2) prompts.push({ intent: 'offers', label: 'Compare my offers' });
   if (state.budget) prompts.push({ intent: 'budget', label: "How's my budget?" });
-  if (state.accommodation) prompts.push({ intent: 'accommodation', label: 'Lease details' });
+  if (state.accommodation) prompts.push({ intent: 'accommodation', label: 'Rent details' });
   if (state.applications.total > 0) prompts.push({ intent: 'applications', label: 'Pipeline status' });
   if (prompts.length === 0) prompts.push({ intent: 'status', label: 'Mission status' });
   return prompts.slice(0, 4);
@@ -91,9 +91,9 @@ function offersReply(state: JourneyState): string {
 }
 
 function accommodationReply(state: JourneyState): string {
-  if (!state.accommodation) return "No accommodation logged yet. Add your PG or lease from the Travel tab.";
+  if (!state.accommodation) return "No accommodation logged yet. Add your PG or rental from the Travel tab.";
   const { name, monthlyRentAed, checkOutDate } = state.accommodation;
-  return `${name} at ${monthlyRentAed.toLocaleString()} AED/month${checkOutDate ? `, paid through ${checkOutDate}` : ' on an ongoing lease'}.`;
+  return `${name} at ${monthlyRentAed.toLocaleString()} AED/month${checkOutDate ? `, paid through ${checkOutDate}` : ' on an ongoing rental'}.`;
 }
 
 function applicationsReply(state: JourneyState): string {
@@ -108,7 +108,7 @@ function statusReply(state: JourneyState): string {
   if (state.visa) parts.push(`visa: ${Math.max(state.visa.daysUntilExpiry, 0)}d left`);
   if (state.budget) parts.push(`budget: ${state.budget.percentUsed}% used`);
   if (state.pendingOffers.length > 0) parts.push(`${state.pendingOffers.length} pending offer${state.pendingOffers.length === 1 ? '' : 's'}`);
-  return `Here's where things stand — ${parts.join(', ')}. Ask me about your interview, visa, budget, offers, lease, or applications.`;
+  return `Here's where things stand — ${parts.join(', ')}. Ask me about your interview, visa, budget, offers, rent, or applications.`;
 }
 
 export function getCopilotReply(state: JourneyState, intent: CopilotIntent): string {

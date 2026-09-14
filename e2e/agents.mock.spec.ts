@@ -55,9 +55,8 @@ test.describe('Specialized Mission Agents (mock backend)', () => {
     await expect(page.getByText('No accommodation logged yet.')).toBeVisible();
     await expect(page.getByText('No offers yet — keep applying.')).toBeVisible();
 
-    // Basecamp collapses to one honest button when there's nothing yet to distinguish — no dead ends.
-    await expect(page.getByRole('link', { name: 'Manage Lease' })).toHaveCount(0);
-    await page.getByRole('link', { name: 'Add Travel Details' }).click();
+    // Basecamp is a single button — both "Manage Rent" and "Visa & Residency" would land on the same Travel page anyway.
+    await page.getByRole('link', { name: 'Manage Rent & Visa' }).click();
     await expect(page).toHaveURL(/\/travel$/);
 
     await page.goto('/agents');

@@ -70,8 +70,7 @@ describe('AgentsHubPage', () => {
     expect(screen.getByRole('heading', { name: 'Specialized Mission Agents', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('Agent 01 · Basecamp')).toBeInTheDocument();
     expect(screen.getByText('Deira Suite · paid to 2026-10-31')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    expect(screen.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
+    expect(screen.getByRole('link', { name: 'Manage Rent & Visa' })).toHaveAttribute('href', '/travel');
     expect(screen.getByRole('link', { name: 'Log Application' })).toHaveAttribute('href', '/applications?action=add');
   });
 
@@ -89,8 +88,7 @@ describe('AgentsHubPage', () => {
     );
     renderPage();
 
-    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    expect(screen.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
+    expect(screen.getByRole('link', { name: 'Manage Rent & Visa' })).toHaveAttribute('href', '/travel');
     expect(screen.getByRole('link', { name: /Opportunities/ })).toHaveAttribute('href', '/applications');
     expect(screen.getByRole('link', { name: 'Log Application' })).toHaveAttribute('href', '/applications?action=add');
     expect(screen.getByRole('link', { name: /Compare Offers/ })).toHaveAttribute('href', '/analytics');
@@ -122,53 +120,21 @@ describe('AgentsHubPage', () => {
     expect(screen.getByRole('link', { name: 'View Pipeline' })).toHaveAttribute('href', '/applications');
   });
 
-  it('collapses Basecamp to one full-width button when neither accommodation nor visa is logged, since both would otherwise do the same thing', () => {
-    mockedUseJourneyState.mockReturnValue(mockResult({ data: makeJourneyState({ accommodation: null, visa: null }) }));
-    renderPage();
+  it('always shows Basecamp as a single full-width button, since every state lands on the same Travel & Accommodation page', () => {
+    // Regardless of what combination of accommodation/visa exists, there is only one real destination — one button, not two.
+    for (const overrides of [
+      { accommodation: null, visa: null },
+      { accommodation: { name: 'Deira Suite', address: 'Deira, Dubai', monthlyRentAed: 4500, checkOutDate: null }, visa: null },
+      { accommodation: null },
+    ]) {
+      mockedUseJourneyState.mockReturnValue(mockResult({ data: makeJourneyState(overrides) }));
+      const { unmount } = renderPage();
 
-    expect(screen.getByRole('link', { name: 'Add Travel Details' })).toHaveAttribute('href', '/travel');
-    expect(screen.queryByRole('link', { name: 'Manage Lease' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Visa & Residency' })).not.toBeInTheDocument();
-  });
-
-  it('collapses Basecamp to just "Manage Lease" when only accommodation exists — "Visa & Residency" would land on nothing', () => {
-    mockedUseJourneyState.mockReturnValue(
-      mockResult({
-        data: makeJourneyState({
-          accommodation: { name: 'Deira Suite', address: 'Deira, Dubai', monthlyRentAed: 4500, checkOutDate: null },
-          visa: null,
-        }),
-      }),
-    );
-    renderPage();
-
-    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    expect(screen.queryByRole('link', { name: 'Visa & Residency' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Add Travel Details' })).not.toBeInTheDocument();
-  });
-
-  it('collapses Basecamp to just "Visa & Residency" when only a visa exists — "Manage Lease" would land on nothing', () => {
-    mockedUseJourneyState.mockReturnValue(mockResult({ data: makeJourneyState({ accommodation: null }) }));
-    renderPage();
-
-    expect(screen.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
-    expect(screen.queryByRole('link', { name: 'Manage Lease' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Add Travel Details' })).not.toBeInTheDocument();
-  });
-
-  it('shows both Basecamp buttons only once both accommodation and visa exist', () => {
-    mockedUseJourneyState.mockReturnValue(
-      mockResult({
-        data: makeJourneyState({
-          accommodation: { name: 'Deira Suite', address: 'Deira, Dubai', monthlyRentAed: 4500, checkOutDate: null },
-        }),
-      }),
-    );
-    renderPage();
-
-    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    expect(screen.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
-    expect(screen.queryByRole('link', { name: 'Add Travel Details' })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Manage Rent & Visa' })).toHaveAttribute('href', '/travel');
+      expect(screen.queryByRole('link', { name: 'Manage Rent' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Visa & Residency' })).not.toBeInTheDocument();
+      unmount();
+    }
   });
 
   it('never fabricates a confidence score — only shows real compareOffers reasons for 2+ offers', () => {
