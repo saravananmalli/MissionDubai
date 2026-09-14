@@ -108,14 +108,20 @@ const basecamp: AgentDefinition = {
     );
   },
   getActions(state) {
-    // With neither section logged yet, both buttons would land on the same add-travel flow — one honest action instead of two identical ones.
-    if (!state.accommodation && !state.visa) {
-      return [{ kind: 'link', label: 'Add Travel Details', icon: Home, to: '/travel', tone: 'highlight' }];
+    // Only show both buttons once both sections actually exist to scroll to — otherwise the "missing" one silently lands on the same page with nothing to show, which reads as the same action twice.
+    if (state.accommodation && state.visa) {
+      return [
+        { kind: 'link', label: 'Manage Lease', icon: Home, to: '/travel#lease' },
+        { kind: 'link', label: 'Visa & Residency', icon: ShieldCheck, to: '/travel#visa' },
+      ];
     }
-    return [
-      { kind: 'link', label: 'Manage Lease', icon: Home, to: '/travel#lease' },
-      { kind: 'link', label: 'Visa & Residency', icon: ShieldCheck, to: '/travel#visa' },
-    ];
+    if (state.accommodation) {
+      return [{ kind: 'link', label: 'Manage Lease', icon: Home, to: '/travel#lease', tone: 'highlight' }];
+    }
+    if (state.visa) {
+      return [{ kind: 'link', label: 'Visa & Residency', icon: ShieldCheck, to: '/travel#visa', tone: 'highlight' }];
+    }
+    return [{ kind: 'link', label: 'Add Travel Details', icon: Home, to: '/travel', tone: 'highlight' }];
   },
 };
 

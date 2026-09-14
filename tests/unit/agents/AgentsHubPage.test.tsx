@@ -79,6 +79,7 @@ describe('AgentsHubPage', () => {
     mockedUseJourneyState.mockReturnValue(
       mockResult({
         data: makeJourneyState({
+          accommodation: { name: 'Deira Suite', address: 'Deira, Dubai', monthlyRentAed: 4500, checkOutDate: null },
           pendingOffers: [
             { id: 'o1', user_id: 'u1', application_id: 'a1', companyName: 'A', salary_aed: 1, bonus_percent: null, leave_days: null, visa_sponsorship: false, visa_cost_responsibility: null, location: null, growth_rating: null, received_date: '2026-09-10', status: 'pending', created_at: '2026-09-10T00:00:00Z' },
             { id: 'o2', user_id: 'u1', application_id: 'a2', companyName: 'B', salary_aed: 2, bonus_percent: null, leave_days: null, visa_sponsorship: false, visa_cost_responsibility: null, location: null, growth_rating: null, received_date: '2026-09-10', status: 'pending', created_at: '2026-09-10T00:00:00Z' },
@@ -130,12 +131,36 @@ describe('AgentsHubPage', () => {
     expect(screen.queryByRole('link', { name: 'Visa & Residency' })).not.toBeInTheDocument();
   });
 
-  it('keeps Basecamp at two distinct buttons once accommodation or visa exists', () => {
+  it('collapses Basecamp to just "Manage Lease" when only accommodation exists — "Visa & Residency" would land on nothing', () => {
     mockedUseJourneyState.mockReturnValue(
       mockResult({
         data: makeJourneyState({
           accommodation: { name: 'Deira Suite', address: 'Deira, Dubai', monthlyRentAed: 4500, checkOutDate: null },
           visa: null,
+        }),
+      }),
+    );
+    renderPage();
+
+    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
+    expect(screen.queryByRole('link', { name: 'Visa & Residency' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Add Travel Details' })).not.toBeInTheDocument();
+  });
+
+  it('collapses Basecamp to just "Visa & Residency" when only a visa exists — "Manage Lease" would land on nothing', () => {
+    mockedUseJourneyState.mockReturnValue(mockResult({ data: makeJourneyState({ accommodation: null }) }));
+    renderPage();
+
+    expect(screen.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
+    expect(screen.queryByRole('link', { name: 'Manage Lease' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Add Travel Details' })).not.toBeInTheDocument();
+  });
+
+  it('shows both Basecamp buttons only once both accommodation and visa exist', () => {
+    mockedUseJourneyState.mockReturnValue(
+      mockResult({
+        data: makeJourneyState({
+          accommodation: { name: 'Deira Suite', address: 'Deira, Dubai', monthlyRentAed: 4500, checkOutDate: null },
         }),
       }),
     );
