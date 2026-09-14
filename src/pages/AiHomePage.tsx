@@ -2,15 +2,17 @@ import '@fontsource/manrope/700.css';
 import '@fontsource/manrope/800.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import '@fontsource/plus-jakarta-sans/800.css';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Briefcase, Calendar, GitFork, Headphones, Home, LogOut, Mic, ShieldCheck, Video, Wallet, X } from 'lucide-react';
+import { Briefcase, Calendar, GitFork, Headphones, Home, Mic, ShieldCheck, Video, Wallet } from 'lucide-react';
 import { useAuth } from '@/app/auth-context';
 import { ErrorState } from '@/components/ErrorState';
-import { DubaiNeonBadge } from '@/components/DubaiNeonBadge';
+import { AppHeader } from '@/components/AppHeader';
+import { NotificationsDrawer } from '@/components/NotificationsDrawer';
 import { useJourneyState } from '@/domains/journey/api';
-import { rankSuggestions } from '@/domains/suggestions/engine';
-import { useDismissedSuggestionIds, useDismissSuggestion } from '@/domains/suggestions/api';
+import { useMissionAlerts } from '@/domains/suggestions/useMissionAlerts';
+import { useIsOnline } from '@/hooks/useIsOnline';
+import { deriveDisplayName } from '@/lib/deriveDisplayName';
 import type { Suggestion, SuggestionAction } from '@/domains/suggestions/types';
 
 type OpenFlowAction = Extract<SuggestionAction, { kind: 'open_flow' }>;
@@ -25,27 +27,6 @@ const FLOW_ROUTES: Record<OpenFlowAction['flowId'], string> = {
 
 function resolveSuggestionRoute(action: SuggestionAction): string {
   return action.kind === 'navigate' ? action.to : FLOW_ROUTES[action.flowId];
-}
-
-function deriveDisplayName(email: string | undefined): string {
-  if (!email) return 'there';
-  const local = email.split('@')[0] ?? email;
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
-
-function useIsOnline(): boolean {
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  useEffect(() => {
-    const goOnline = () => setIsOnline(true);
-    const goOffline = () => setIsOnline(false);
-    window.addEventListener('online', goOnline);
-    window.addEventListener('offline', goOffline);
-    return () => {
-      window.removeEventListener('online', goOnline);
-      window.removeEventListener('offline', goOffline);
-    };
-  }, []);
-  return isOnline;
 }
 
 function priorityBadgeLabel(priority: Suggestion): string {
@@ -68,12 +49,11 @@ const PRIORITY_ICONS: Record<Suggestion['type'], typeof Video> = {
 };
 
 export default function AiHomePage() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const isOnline = useIsOnline();
   const journeyQuery = useJourneyState();
-  const dismissedQuery = useDismissedSuggestionIds();
-  const dismissMutation = useDismissSuggestion();
+  const { suggestions, dismissAllShown: dismissAllAlerts } = useMissionAlerts(journeyQuery.data);
   const [showNotifications, setShowNotifications] = useState(false);
 
   if (journeyQuery.isLoading) {
@@ -87,13 +67,12 @@ export default function AiHomePage() {
   if (journeyQuery.isError) {
     return (
       <main className="flex flex-col gap-4 px-4 py-6">
-        <ErrorState message="Couldn't load your journey. Check your connection and try again." />
+        <ErrorState message="Couldn't load your journey. Check your connection and try again." onRetry={journeyQuery.refetch} />
       </main>
     );
   }
 
   const state = journeyQuery.data;
-  const suggestions = rankSuggestions(state, dismissedQuery.data ?? new Set());
   const [priority] = suggestions;
 
   function handleSelect(suggestion: Suggestion) {
@@ -101,7 +80,7 @@ export default function AiHomePage() {
   }
 
   function dismissAllShown() {
-    suggestions.filter((s) => s.dismissible).forEach((s) => dismissMutation.mutate(s.id));
+    dismissAllAlerts();
     setShowNotifications(false);
   }
 
@@ -130,47 +109,25 @@ export default function AiHomePage() {
 
   return (
     <div style={{ fontFamily: "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* Header */}
-      <header className="sticky top-0 z-30 px-4 py-3 bg-[#0B0813]/85 backdrop-blur-xl border-b border-[#2C1F45]/50 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <DubaiNeonBadge size="md" />
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold text-white tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                {deriveDisplayName(user?.email)}
-              </span>
-              <span className="w-2 h-2 rounded-full bg-purple-500 ring-2 ring-purple-400/30" />
-            </div>
-            <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-medium">
-              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
-              <span>
-                {isOnline ? 'Dubai Active' : 'Offline'}
-                {state.visa && ` • ${Math.max(state.visa.daysUntilExpiry, 0)}d left`}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowNotifications(true)}
-            className="relative w-9 h-9 rounded-full bg-[#1A122E] border border-[#3E2763] flex items-center justify-center text-zinc-300 hover:text-white transition-all active:scale-95 shadow-inner"
-            aria-label="Notifications"
-          >
-            <Bell className="w-4 h-4" />
-            {suggestions.length > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EC4899] ring-2 ring-[#0B0813]" />
-            )}
-          </button>
-          <button
-            onClick={() => void signOut()}
-            aria-label="Log out"
-            className="w-9 h-9 rounded-full bg-[#1A122E] border border-[#3E2763] flex items-center justify-center text-zinc-300 hover:text-white active:scale-95"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
+      <AppHeader
+        title={
+          <span className="flex items-center gap-1.5">
+            {deriveDisplayName(user?.email)}
+            <span className="h-2 w-2 rounded-full bg-purple-500 ring-2 ring-purple-400/30" aria-hidden="true" />
+          </span>
+        }
+        subtitle={
+          <span className="flex items-center gap-1">
+            <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'animate-pulse bg-emerald-400' : 'bg-zinc-500'}`} aria-hidden="true" />
+            <span>
+              {isOnline ? 'Dubai Active' : 'Offline'}
+              {state.visa && ` • ${Math.max(state.visa.daysUntilExpiry, 0)}d left`}
+            </span>
+          </span>
+        }
+        unreadCount={suggestions.length}
+        onNotificationsClick={() => setShowNotifications(true)}
+      />
       <p className="sr-only">Signed in as {user?.email}</p>
 
       <div className="px-4 py-3 space-y-3 pb-24">
@@ -510,44 +467,8 @@ export default function AiHomePage() {
         </section>
       </div>
 
-      {/* Notifications drawer — sourced from the real suggestion engine, not sample data */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-sm bg-[#150D24] border border-[#523385] rounded-3xl p-5 shadow-2xl relative space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-pink-400" />
-                <h3 className="text-sm font-extrabold text-white">Mission Alerts</h3>
-              </div>
-              <button
-                onClick={() => setShowNotifications(false)}
-                className="w-7 h-7 rounded-full bg-[#23173F] border border-purple-500/30 flex items-center justify-center text-zinc-400 hover:text-white"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-72 overflow-y-auto">
-              {suggestions.length === 0 && <p className="text-xs text-zinc-400 py-4 text-center">No alerts right now.</p>}
-              {suggestions.map((suggestion) => (
-                <div key={suggestion.id} className="p-3 rounded-xl border text-xs space-y-1 bg-[#1F1338] border-pink-500/40 text-white">
-                  <div className="flex items-center justify-between font-bold">
-                    <span>{suggestion.title}</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">{suggestion.reason}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={dismissAllShown}
-              className="w-full py-2.5 rounded-xl bg-[#23173F] border border-purple-500/40 text-xs font-bold text-white hover:bg-[#2C1D4F] transition-colors"
-            >
-              Mark All Read & Dismiss
-            </button>
-          </div>
-        </div>
+        <NotificationsDrawer suggestions={suggestions} onDismissAll={dismissAllShown} onClose={() => setShowNotifications(false)} />
       )}
     </div>
   );

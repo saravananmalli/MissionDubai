@@ -1,130 +1,132 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight, Home, Radar, Scale, Video, Wallet, type LucideIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Bot } from 'lucide-react';
+import { useAuth } from '@/app/auth-context';
+import { AppHeader } from '@/components/AppHeader';
+import { NotificationsDrawer } from '@/components/NotificationsDrawer';
 import { ErrorState } from '@/components/ErrorState';
+import { AgentTile, DisabledVoiceButton } from '@/components/agents';
 import { useJourneyState } from '@/domains/journey/api';
-
-function AgentCard({
-  number,
-  label,
-  icon: Icon,
-  stats,
-  to,
-}: {
-  number: string;
-  label: string;
-  icon: LucideIcon;
-  stats: string[];
-  to: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="flex flex-col gap-3 rounded-lg border border-border bg-surface/[0.85] p-4 shadow-card backdrop-blur-md transition-transform active:scale-[0.98]"
-    >
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cta">
-          <Icon size={18} className="text-white" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">Agent {number}</p>
-          <p className="truncate text-sm font-semibold text-text-primary">{label}</p>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {stats.map((stat) => (
-          <span key={stat} className="rounded-full bg-surface-2/70 px-2.5 py-1 text-xs text-text-secondary">
-            {stat}
-          </span>
-        ))}
-      </div>
-      <span className="inline-flex items-center gap-1 self-start text-xs font-medium text-primary-light">
-        Open <ArrowRight size={13} aria-hidden="true" />
-      </span>
-    </Link>
-  );
-}
+import { useMissionAlerts } from '@/domains/suggestions/useMissionAlerts';
+import { firstRunPromptRule } from '@/domains/suggestions/rules';
+import { AGENTS } from '@/domains/agents/config';
+import { useIsOnline } from '@/hooks/useIsOnline';
+import { deriveDisplayName } from '@/lib/deriveDisplayName';
 
 export default function AgentsHubPage() {
+  const { user } = useAuth();
+  const isOnline = useIsOnline();
   const journeyQuery = useJourneyState();
+  const { suggestions, dismissAllShown: dismissAllAlerts } = useMissionAlerts(journeyQuery.data);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  function dismissAllShown() {
+    dismissAllAlerts();
+    setShowNotifications(false);
+  }
+
+  const header = (
+    <AppHeader
+      title={
+        <span className="flex items-center gap-1.5">
+          {deriveDisplayName(user?.email)}
+          <span className="h-2 w-2 rounded-full bg-purple-500 ring-2 ring-purple-400/30" aria-hidden="true" />
+        </span>
+      }
+      subtitle={
+        <span className="flex items-center gap-1">
+          <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'animate-pulse bg-emerald-400' : 'bg-zinc-500'}`} aria-hidden="true" />
+          <span>{isOnline ? 'Dubai Active' : 'Offline'}</span>
+        </span>
+      }
+      unreadCount={suggestions.length}
+      onNotificationsClick={() => setShowNotifications(true)}
+    />
+  );
 
   if (journeyQuery.isLoading) {
     return (
-      <main className="px-4 py-6">
-        <p role="status">Loading…</p>
-      </main>
+      <>
+        {header}
+        <main className="px-4 py-6">
+          <p role="status">Loading…</p>
+        </main>
+      </>
     );
   }
 
   if (journeyQuery.isError) {
     return (
-      <main className="flex flex-col gap-4 px-4 py-6">
-        <ErrorState message="Couldn't load your journey. Check your connection and try again." />
-      </main>
+      <>
+        {header}
+        <main className="flex flex-col gap-4 px-4 py-6">
+          <ErrorState message="Couldn't load your journey. Check your connection and try again." onRetry={journeyQuery.refetch} />
+        </main>
+      </>
     );
   }
 
   const state = journeyQuery.data;
+  const firstRun = firstRunPromptRule(state);
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-6 pb-10">
-      <div>
-        <span aria-hidden="true" className="mb-2 block h-1 w-8 rounded-full bg-cta" />
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary-light">Neural Command Matrix</p>
-        <h1 className="font-sans text-2xl font-bold text-text-primary">Specialized Mission Agents</h1>
-        <p className="text-sm text-text-secondary">Every card below reflects your real, saved data — tap through to manage it.</p>
-      </div>
+    <>
+      {header}
+      <main className="flex flex-col gap-4 px-4 py-6 pb-24">
+        <div>
+          <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-900/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pink-300">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" aria-hidden="true" />
+            <span>Neural Command Matrix · 5 of 5</span>
+          </div>
+          <h1 className="text-xl font-extrabold tracking-tight text-white">Specialized Mission Agents</h1>
+          <p className="mt-0.5 text-xs leading-relaxed text-zinc-300">Every card below reflects your real, saved data — tap one to open it.</p>
+        </div>
 
-      <AgentCard
-        number="01"
-        label="Stay / PG & Residency"
-        icon={Home}
-        to="/travel"
-        stats={[
-          state.accommodation ? state.accommodation.name : 'No PG yet',
-          state.accommodation ? `${state.accommodation.monthlyRentAed.toLocaleString()} AED/mo` : 'Add accommodation',
-          state.visa ? `Visa: ${Math.max(state.visa.daysUntilExpiry, 0)}d left` : 'No visa yet',
-        ]}
-      />
-      <AgentCard
-        number="02"
-        label="Scout Radar & Enterprise Opportunities"
-        icon={Radar}
-        to="/applications"
-        stats={[
-          `${state.applications.total} Lead${state.applications.total === 1 ? '' : 's'}`,
-          `${state.applications.funnel[1]?.count ?? 0} Interviewed`,
-          `${state.applications.funnel[2]?.count ?? 0} Offers`,
-        ]}
-      />
-      <AgentCard
-        number="03"
-        label="Voice Copilot & Interview Briefing"
-        icon={Video}
-        to="/interviews"
-        stats={
-          state.nextInterview
-            ? [`${state.nextInterview.companyName} next`, state.nextInterview.interviewDate]
-            : ['No interview scheduled']
-        }
-      />
-      <AgentCard
-        number="04"
-        label="Treasury & Relocation Liquidity"
-        icon={Wallet}
-        to="/expenses"
-        stats={
-          state.budget
-            ? [`${state.budget.spentAed.toLocaleString()} / ${state.budget.amountAed.toLocaleString()} AED`, `${state.budget.percentUsed}% used`]
-            : ['No budget set']
-        }
-      />
-      <AgentCard
-        number="05"
-        label="Arbitration & Journey Brain"
-        icon={Scale}
-        to="/analytics"
-        stats={[`${state.pendingOffers.length} pending offer${state.pendingOffers.length === 1 ? '' : 's'}`]}
-      />
-    </main>
+        {firstRun && (
+          <div className="rounded-2xl border border-purple-500/40 bg-purple-950/30 p-3.5 text-sm font-semibold text-white">
+            {firstRun.title} — <span className="font-normal text-zinc-300">{firstRun.reason}</span>
+          </div>
+        )}
+
+        {/* Hero / Autonomous Engine card */}
+        <section className="space-y-3 rounded-2xl border border-[#EC4899]/40 bg-gradient-to-r from-[#21143D] to-[#150D27] p-4 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 text-white shadow-md">
+                <Bot className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white">Autonomous Engine v2.4</div>
+                <div className="text-[10px] text-zinc-300">Listening for natural voice cues…</div>
+              </div>
+            </div>
+            <div className="flex h-5 items-center gap-1" aria-hidden="true">
+              <span className="h-3 w-1 animate-pulse rounded-full bg-[#EC4899]" />
+              <span className="h-5 w-1 animate-pulse rounded-full bg-purple-400 delay-75" />
+              <span className="h-2 w-1 animate-pulse rounded-full bg-cyan-400 delay-150" />
+              <span className="h-4 w-1 animate-pulse rounded-full bg-pink-400 delay-100" />
+            </div>
+          </div>
+          <DisabledVoiceButton label="🎙 Command All Agents" className="w-full" />
+        </section>
+
+        {AGENTS.map((agent) => (
+          <AgentTile
+            key={agent.id}
+            to={`/agents/${agent.id}`}
+            agentNumber={agent.number}
+            name={agent.name}
+            subtitle={agent.subtitle}
+            icon={agent.icon}
+            accent={agent.accent}
+            status={agent.getStatus(state)}
+            summary={agent.getSummary(state)}
+          />
+        ))}
+      </main>
+
+      {showNotifications && (
+        <NotificationsDrawer suggestions={suggestions} onDismissAll={dismissAllShown} onClose={() => setShowNotifications(false)} />
+      )}
+    </>
   );
 }

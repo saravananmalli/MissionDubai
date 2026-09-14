@@ -11,6 +11,8 @@ export interface UseJourneyStateResult {
   data: JourneyState;
   isLoading: boolean;
   isError: boolean;
+  /** Re-runs every underlying query — lets a page offer a real Retry action on isError. */
+  refetch: () => void;
 }
 
 /** Composes the existing per-domain hooks — no new query keys, no duplicate fetches beyond what each page already does. */
@@ -55,5 +57,14 @@ export function useJourneyState(): UseJourneyStateResult {
       budgetQuery.isError ||
       expensesQuery.isError ||
       offersQuery.isError,
+    refetch: () => {
+      void tripQuery.refetch();
+      void travelSummaryQuery.refetch();
+      void applicationsQuery.refetch();
+      void interviewsQuery.refetch();
+      void budgetQuery.refetch();
+      void expensesQuery.refetch();
+      void offersQuery.refetch();
+    },
   };
 }
