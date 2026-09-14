@@ -55,9 +55,10 @@ test.describe('Specialized Mission Agents (mock backend)', () => {
     await expect(page.getByText('No accommodation logged yet.')).toBeVisible();
     await expect(page.getByText('No offers yet — keep applying.')).toBeVisible();
 
-    // A real navigation button — no dead ends.
-    await page.getByRole('link', { name: 'Manage Lease' }).click();
-    await expect(page).toHaveURL(/\/travel#lease$/);
+    // Basecamp collapses to one honest button when there's nothing yet to distinguish — no dead ends.
+    await expect(page.getByRole('link', { name: 'Manage Lease' })).toHaveCount(0);
+    await page.getByRole('link', { name: 'Add Travel Details' }).click();
+    await expect(page).toHaveURL(/\/travel$/);
 
     await page.goto('/agents');
 
@@ -131,8 +132,8 @@ test.describe('Specialized Mission Agents (mock backend)', () => {
 
     await page.goto('/agents');
 
-    // Basecamp: "Visa & Residency" and "Manage Lease" both land on Travel, but distinctly.
-    await expect(page.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    await expect(page.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
+    // Arbitration with no offers yet: "Keep Applying" and "View Pipeline" both land on Applications, but distinctly.
+    await expect(page.getByRole('link', { name: 'Keep Applying' })).toHaveAttribute('href', '/applications?action=add');
+    await expect(page.getByRole('link', { name: 'View Pipeline' })).toHaveAttribute('href', '/applications');
   });
 });

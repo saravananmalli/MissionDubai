@@ -107,7 +107,11 @@ const basecamp: AgentDefinition = {
       </>
     );
   },
-  getActions() {
+  getActions(state) {
+    // With neither section logged yet, both buttons would land on the same add-travel flow — one honest action instead of two identical ones.
+    if (!state.accommodation && !state.visa) {
+      return [{ kind: 'link', label: 'Add Travel Details', icon: Home, to: '/travel', tone: 'highlight' }];
+    }
     return [
       { kind: 'link', label: 'Manage Lease', icon: Home, to: '/travel#lease' },
       { kind: 'link', label: 'Visa & Residency', icon: ShieldCheck, to: '/travel#visa' },
@@ -326,7 +330,10 @@ const arbitration: AgentDefinition = {
   },
   getActions(state) {
     if (state.pendingOffers.length === 0) {
-      return [{ kind: 'link', label: 'Keep Applying', icon: Send, to: '/applications', tone: 'highlight' }];
+      return [
+        { kind: 'link', label: 'Keep Applying', icon: Send, to: '/applications?action=add', tone: 'highlight' },
+        { kind: 'link', label: 'View Pipeline', icon: Briefcase, to: '/applications' },
+      ];
     }
     return [
       { kind: 'link', label: 'Compare Offers', icon: ArrowLeftRight, to: '/analytics' },
