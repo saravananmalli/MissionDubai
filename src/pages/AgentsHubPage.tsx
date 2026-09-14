@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Bot } from 'lucide-react';
+import { Bot, Mic } from 'lucide-react';
 import { useAuth } from '@/app/auth-context';
 import { AppHeader } from '@/components/AppHeader';
 import { NotificationsDrawer } from '@/components/NotificationsDrawer';
 import { ErrorState } from '@/components/ErrorState';
-import { AgentActionLink, AgentCardShell, AgentVoiceButton, CopilotModal } from '@/components/agents';
+import { AgentButton, AgentCardShell, CopilotModal } from '@/components/agents';
 import { useJourneyState } from '@/domains/journey/api';
 import { useMissionAlerts } from '@/domains/suggestions/useMissionAlerts';
 import { firstRunPromptRule } from '@/domains/suggestions/rules';
@@ -108,32 +108,37 @@ export default function AgentsHubPage() {
               <span className="h-4 w-1 animate-pulse rounded-full bg-pink-400 delay-100" />
             </div>
           </div>
-          <AgentVoiceButton label="🎙 Command All Agents" onClick={() => setCopilotIntent('status')} className="w-full" fullWidth />
+          <AgentButton icon={Mic} label="Command All Agents" tone="highlight" fullWidth onClick={() => setCopilotIntent('status')} />
         </section>
 
-        {AGENTS.map((agent) => (
-          <AgentCardShell
-            key={agent.id}
-            agentNumber={agent.number}
-            name={agent.name}
-            subtitle={agent.subtitle}
-            icon={agent.icon}
-            accent={agent.accent}
-            status={agent.getStatus(state)}
-            highlightBorder={agent.highlightBorder}
-            footer={agent.getActions(state).map((action, index) =>
-              action.kind === 'voice' ? (
-                <AgentVoiceButton key={index} label={action.label} onClick={() => setCopilotIntent('interview')} />
-              ) : (
-                <AgentActionLink key={index} to={action.to!} variant={action.variant ?? 'primary'} fullWidth={agent.getActions(state).length === 1}>
-                  {action.label}
-                </AgentActionLink>
-              ),
-            )}
-          >
-            {agent.renderPanel(state)}
-          </AgentCardShell>
-        ))}
+        {AGENTS.map((agent) => {
+          const actions = agent.getActions(state);
+          return (
+            <AgentCardShell
+              key={agent.id}
+              agentNumber={agent.number}
+              name={agent.name}
+              subtitle={agent.subtitle}
+              icon={agent.icon}
+              accent={agent.accent}
+              status={agent.getStatus(state)}
+              highlightBorder={agent.highlightBorder}
+              footer={actions.map((action, index) => (
+                <AgentButton
+                  key={index}
+                  icon={action.icon}
+                  label={action.label}
+                  tone={action.tone ?? 'muted'}
+                  fullWidth={actions.length === 1}
+                  to={action.kind === 'link' ? action.to : undefined}
+                  onClick={action.kind === 'voice' ? () => setCopilotIntent('interview') : undefined}
+                />
+              ))}
+            >
+              {agent.renderPanel(state)}
+            </AgentCardShell>
+          );
+        })}
       </main>
 
       {copilotIntent && <CopilotModal state={state} initialIntent={copilotIntent} onClose={() => setCopilotIntent(null)} />}

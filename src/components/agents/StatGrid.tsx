@@ -21,11 +21,11 @@ const COLUMN_CLASSES: Record<number, string> = {
 export function StatGrid({ stats }: { stats: Stat[] }) {
   const columns = COLUMN_CLASSES[stats.length] ?? 'grid-cols-3';
   return (
-    <div className={`grid gap-2 rounded-xl border border-purple-500/20 bg-[#110A21] p-2.5 text-center ${columns}`}>
+    <div className={`grid gap-2 rounded-xl border border-purple-500/20 bg-[#110A21] p-3 text-center ${columns}`}>
       {stats.map((stat) => (
         <div key={stat.label}>
-          <span className={`block text-xs font-black ${VALUE_TONES[stat.tone ?? 'default']}`}>{stat.value}</span>
-          <span className="text-[9px] text-zinc-400">{stat.label}</span>
+          <span className={`block text-2xl font-black leading-tight ${VALUE_TONES[stat.tone ?? 'default']}`}>{stat.value}</span>
+          <span className="text-[10px] text-zinc-400">{stat.label}</span>
         </div>
       ))}
     </div>

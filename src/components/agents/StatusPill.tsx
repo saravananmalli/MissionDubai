@@ -8,9 +8,18 @@ const TONES: Record<StatusTone, string> = {
   neutral: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/30',
 };
 
+const DOT_TONES: Record<StatusTone, string> = {
+  ok: 'bg-emerald-400',
+  warning: 'bg-amber-400',
+  danger: 'bg-rose-400',
+  info: 'bg-cyan-400',
+  neutral: 'bg-zinc-400',
+};
+
 export function StatusPill({ tone, label }: { tone: StatusTone; label: string }) {
   return (
-    <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${TONES[tone]}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${TONES[tone]}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT_TONES[tone]}`} aria-hidden="true" />
       {label}
     </span>
   );

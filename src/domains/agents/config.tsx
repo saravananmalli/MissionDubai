@@ -1,6 +1,35 @@
-import { Headphones, Home, Landmark, Radar, Scale, type LucideIcon } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeftRight,
+  Award,
+  BedDouble,
+  Briefcase,
+  CheckCircle2,
+  CreditCard,
+  FileText,
+  Headphones,
+  Home,
+  Landmark,
+  Mic,
+  PieChart,
+  Radar,
+  Scale,
+  Send,
+  ShieldCheck,
+  UserPlus,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
-import { AlertBanner, InfoPanel, InfoPanelEmpty, ProgressBar, StatGrid, type IconAccent, type StatusTone } from '@/components/agents';
+import {
+  AlertBanner,
+  InfoPanel,
+  InfoPanelEmpty,
+  ProgressBar,
+  StatGrid,
+  type AgentButtonTone,
+  type IconAccent,
+  type StatusTone,
+} from '@/components/agents';
 import { compareOffers, type OfferForComparison } from '@/domains/analytics/utils';
 import { daysUntil } from '@/domains/travel/utils';
 import type { JourneyState } from '@/domains/journey/types';
@@ -10,8 +39,9 @@ export type AgentId = 'basecamp' | 'scout-radar' | 'voice-copilot' | 'treasury' 
 export interface AgentAction {
   kind: 'link' | 'voice';
   label: string;
+  icon: LucideIcon;
   to?: string;
-  variant?: 'primary' | 'secondary';
+  tone?: AgentButtonTone;
 }
 
 export interface AgentDefinition {
@@ -57,7 +87,8 @@ const basecamp: AgentDefinition = {
       <>
         {state.accommodation ? (
           <InfoPanel className="flex items-center justify-between">
-            <span className="text-zinc-300">
+            <span className="flex items-center gap-1.5 text-zinc-300">
+              <BedDouble className="h-3.5 w-3.5 shrink-0 text-purple-300" aria-hidden="true" />
               {state.accommodation.name}
               {state.accommodation.checkOutDate ? ` · paid to ${state.accommodation.checkOutDate}` : ' · ongoing lease'}
             </span>
@@ -68,7 +99,7 @@ const basecamp: AgentDefinition = {
         )}
 
         {state.visa && !state.visa.isExpired && state.visa.daysUntilExpiry <= 7 && (
-          <AlertBanner tone={state.visa.daysUntilExpiry <= 3 ? 'danger' : 'warning'}>
+          <AlertBanner tone={state.visa.daysUntilExpiry <= 3 ? 'danger' : 'warning'} icon={AlertTriangle}>
             Visa: {state.visa.daysUntilExpiry} day{state.visa.daysUntilExpiry === 1 ? '' : 's'} left on your {state.visa.durationDays}-day
             visa.
           </AlertBanner>
@@ -78,8 +109,8 @@ const basecamp: AgentDefinition = {
   },
   getActions() {
     return [
-      { kind: 'link', label: 'Manage Lease', to: '/travel#lease', variant: 'primary' },
-      { kind: 'link', label: 'Visa & Residency →', to: '/travel#visa', variant: 'secondary' },
+      { kind: 'link', label: 'Manage Lease', icon: Home, to: '/travel#lease' },
+      { kind: 'link', label: 'Visa & Residency', icon: ShieldCheck, to: '/travel#visa' },
     ];
   },
 };
@@ -115,7 +146,7 @@ const scoutRadar: AgentDefinition = {
         )}
 
         {sponsoredOfferCount > 0 && (
-          <AlertBanner tone="info">
+          <AlertBanner tone="info" icon={Award}>
             {sponsoredOfferCount} pending offer{sponsoredOfferCount === 1 ? '' : 's'} include visa sponsorship.
           </AlertBanner>
         )}
@@ -124,8 +155,8 @@ const scoutRadar: AgentDefinition = {
   },
   getActions(state) {
     return [
-      { kind: 'link', label: `View Pipeline (${state.applications.total}) →`, to: '/applications', variant: 'primary' },
-      { kind: 'link', label: 'Log Application', to: '/applications?action=add', variant: 'secondary' },
+      { kind: 'link', label: `${state.applications.total} Opportunities`, icon: Briefcase, to: '/applications' },
+      { kind: 'link', label: 'Log Application', icon: UserPlus, to: '/applications?action=add' },
     ];
   },
 };
@@ -163,12 +194,12 @@ const voiceCopilot: AgentDefinition = {
   },
   getActions(state) {
     return [
-      { kind: 'voice', label: 'Open Simulator' },
+      { kind: 'voice', label: 'Open Simulator', icon: Mic, tone: 'highlight' },
       {
         kind: 'link',
-        label: state.nextInterview ? 'Interview Details →' : 'View Interviews →',
+        label: state.nextInterview ? 'Interview Details' : 'View Interviews',
+        icon: FileText,
         to: state.nextInterview ? `/interviews/${state.nextInterview.id}` : '/interviews',
-        variant: 'secondary',
       },
     ];
   },
@@ -220,8 +251,8 @@ const treasury: AgentDefinition = {
   },
   getActions(state) {
     return [
-      { kind: 'link', label: state.budget ? 'Log Expense' : 'Set a Budget', to: '/expenses', variant: 'primary' },
-      { kind: 'link', label: 'Burn Breakdown →', to: '/financial-report', variant: 'secondary' },
+      { kind: 'link', label: state.budget ? 'Log Expense' : 'Set a Budget', icon: CreditCard, to: '/expenses' },
+      { kind: 'link', label: 'Burn Breakdown', icon: PieChart, to: '/financial-report' },
     ];
   },
 };
@@ -295,11 +326,11 @@ const arbitration: AgentDefinition = {
   },
   getActions(state) {
     if (state.pendingOffers.length === 0) {
-      return [{ kind: 'link', label: 'Keep Applying', to: '/applications', variant: 'primary' }];
+      return [{ kind: 'link', label: 'Keep Applying', icon: Send, to: '/applications', tone: 'highlight' }];
     }
     return [
-      { kind: 'link', label: 'Compare Offers →', to: '/analytics', variant: 'primary' },
-      { kind: 'link', label: 'Review & Decide →', to: '/analytics#recommendation', variant: 'secondary' },
+      { kind: 'link', label: 'Compare Offers', icon: ArrowLeftRight, to: '/analytics' },
+      { kind: 'link', label: 'Review & Decide', icon: CheckCircle2, to: '/analytics#recommendation', tone: 'highlight' },
     ];
   },
 };

@@ -5,6 +5,5 @@ export { InfoPanel, InfoPanelEmpty } from '@/components/agents/InfoPanel';
 export { AlertBanner, type BannerTone } from '@/components/agents/AlertBanner';
 export { StatGrid, type Stat } from '@/components/agents/StatGrid';
 export { ProgressBar } from '@/components/agents/ProgressBar';
-export { AgentActionLink } from '@/components/agents/AgentActionLink';
-export { AgentVoiceButton } from '@/components/agents/AgentVoiceButton';
+export { AgentButton, type AgentButtonTone } from '@/components/agents/AgentButton';
 export { CopilotModal } from '@/components/agents/CopilotModal';

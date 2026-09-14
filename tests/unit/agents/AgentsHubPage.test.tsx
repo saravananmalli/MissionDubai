@@ -71,7 +71,7 @@ describe('AgentsHubPage', () => {
     expect(screen.getByText('Agent 01 · Basecamp')).toBeInTheDocument();
     expect(screen.getByText('Deira Suite · paid to 2026-10-31')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    expect(screen.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel#visa');
+    expect(screen.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
     expect(screen.getByRole('link', { name: 'Log Application' })).toHaveAttribute('href', '/applications?action=add');
   });
 
@@ -89,8 +89,8 @@ describe('AgentsHubPage', () => {
     renderPage();
 
     expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    expect(screen.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel#visa');
-    expect(screen.getByRole('link', { name: /View Pipeline/ })).toHaveAttribute('href', '/applications');
+    expect(screen.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
+    expect(screen.getByRole('link', { name: /Opportunities/ })).toHaveAttribute('href', '/applications');
     expect(screen.getByRole('link', { name: 'Log Application' })).toHaveAttribute('href', '/applications?action=add');
     expect(screen.getByRole('link', { name: /Compare Offers/ })).toHaveAttribute('href', '/analytics');
     expect(screen.getByRole('link', { name: /Review & Decide/ })).toHaveAttribute('href', '/analytics#recommendation');

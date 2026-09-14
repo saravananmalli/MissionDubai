@@ -102,7 +102,7 @@ test.describe('Specialized Mission Agents (mock backend)', () => {
 
     await page.goto('/agents');
 
-    await expect(page.getByRole('link', { name: /View Pipeline \(2\)/ })).toHaveAttribute('href', '/applications');
+    await expect(page.getByRole('link', { name: /2 Opportunities/ })).toHaveAttribute('href', '/applications');
     await expect(page.getByText('Tech Corp UAE')).toBeVisible();
     await expect(page.getByText('220,000 AED')).toBeVisible();
     await expect(page.getByText('RECOMMENDED')).toBeVisible();
@@ -133,6 +133,6 @@ test.describe('Specialized Mission Agents (mock backend)', () => {
 
     // Basecamp: "Visa & Residency" and "Manage Lease" both land on Travel, but distinctly.
     await expect(page.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
-    await expect(page.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel#visa');
+    await expect(page.getByRole('link', { name: 'Visa & Residency' })).toHaveAttribute('href', '/travel#visa');
   });
 });
