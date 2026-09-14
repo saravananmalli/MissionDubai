@@ -120,11 +120,13 @@ export function useApplicationEvents(applicationId: string | undefined) {
   });
 }
 
+// Monthly AED, not annual — the quick-tap labels say "/mo" and the display
+// text in ApplicationCard/ApplicationDetailPage does too.
 const SALARY_RANGES: Record<string, { min: number; max: number } | undefined> = {
-  '100-150k': { min: 100_000, max: 150_000 },
-  '150-200k': { min: 150_000, max: 200_000 },
-  '200-250k': { min: 200_000, max: 250_000 },
-  '250k+': { min: 250_000, max: 250_000 },
+  '5-10k': { min: 5_000, max: 10_000 },
+  '10-12k': { min: 10_000, max: 12_000 },
+  '12-15k': { min: 12_000, max: 15_000 },
+  '15k+': { min: 15_000, max: 15_000 },
 };
 
 /**

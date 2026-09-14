@@ -157,7 +157,7 @@ export default function ApplicationDetailPage() {
             <Chip tone="warning">⚠️ Salary: (Will update later)</Chip>
           ) : (
             <p className="text-sm text-text-secondary">
-              Salary: {application.salary_min_aed?.toLocaleString()}–{application.salary_max_aed?.toLocaleString()} AED
+              Salary: {application.salary_min_aed?.toLocaleString()}–{application.salary_max_aed?.toLocaleString()} AED/month
             </p>
           )}
           <p className="text-sm text-text-secondary">Visa sponsorship: {formatEnumLabel(application.visa_sponsorship)}</p>

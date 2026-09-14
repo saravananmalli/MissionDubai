@@ -82,11 +82,11 @@ export function ApplicationEditForm({
         </label>
         <div className="flex gap-3">
           <label className={LABEL_CLASS} htmlFor="edit-salary-min">
-            Salary min (AED)
+            Salary min (AED/month)
             <input id="edit-salary-min" type="number" className={INPUT_CLASS} value={salaryMinAed} onChange={(e) => setSalaryMinAed(e.target.value)} />
           </label>
           <label className={LABEL_CLASS} htmlFor="edit-salary-max">
-            Salary max (AED)
+            Salary max (AED/month)
             <input id="edit-salary-max" type="number" className={INPUT_CLASS} value={salaryMaxAed} onChange={(e) => setSalaryMaxAed(e.target.value)} />
           </label>
         </div>

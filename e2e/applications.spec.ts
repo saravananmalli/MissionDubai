@@ -38,7 +38,7 @@ test.describe('applications + company visits', () => {
     await page.getByLabel('Position title?').fill('Product Manager');
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('button', { name: 'Skip' }).click(); // location, optional
-    await page.getByRole('button', { name: '200-250k' }).click();
+    await page.getByRole('button', { name: '12-15k AED/mo' }).click();
     await page.getByRole('button', { name: 'YES' }).click();
     await page.getByLabel('Contact person name?').fill('Sarah Khan');
     await page.getByRole('button', { name: 'Send' }).click();

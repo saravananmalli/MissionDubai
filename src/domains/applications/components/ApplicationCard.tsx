@@ -32,7 +32,7 @@ export function ApplicationCard({
           <Chip tone="warning">⚠️ Salary: (Will update later)</Chip>
         ) : (
           <p>
-            Salary: {application.salary_min_aed?.toLocaleString()}–{application.salary_max_aed?.toLocaleString()} AED
+            Salary: {application.salary_min_aed?.toLocaleString()}–{application.salary_max_aed?.toLocaleString()} AED/month
           </p>
         )}
         {application.visa_sponsorship === 'need_to_ask' ? (

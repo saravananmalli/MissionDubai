@@ -1,6 +1,6 @@
 import type { ApplicationSource, FinalOutcome, ResumeStatus, VisitPurpose } from '@/lib/database.types';
 
-export type SalaryRangeChoice = '100-150k' | '150-200k' | '200-250k' | '250k+' | 'will_update_later';
+export type SalaryRangeChoice = '5-10k' | '10-12k' | '12-15k' | '15k+' | 'will_update_later';
 export type YesNoUnsureChoice = 'yes' | 'no' | 'unsure' | 'need_to_ask';
 
 // NaukriGulf/LinkedIn/etc. are already specific, named sources — no follow-up

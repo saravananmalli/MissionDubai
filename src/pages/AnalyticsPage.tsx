@@ -120,9 +120,12 @@ export default function AnalyticsPage() {
 
   const salaryAnalysis = computeSalaryAnalysis(
     offers.map((o) => o.salary_aed),
+    // Applications store expected salary as a MONTHLY AED range, while offers
+    // are annual — convert to annual so "Average Expected" stays comparable
+    // to "Min/Max Offered" rather than silently mixing units.
     applications
       .filter((a) => a.salary_status === 'provided' && a.salary_min_aed !== null && a.salary_max_aed !== null)
-      .map((a) => ({ min: a.salary_min_aed!, max: a.salary_max_aed! })),
+      .map((a) => ({ min: a.salary_min_aed! * 12, max: a.salary_max_aed! * 12 })),
   );
 
   const comparison =
