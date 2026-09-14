@@ -25,7 +25,8 @@ interface AgentButtonProps {
 
 /** The one reusable button every agent card's footer uses — a real link when `to` is given, a real button (e.g. for the Copilot) otherwise. */
 export function AgentButton({ icon: Icon, label, tone = 'muted', fullWidth, to, onClick }: AgentButtonProps) {
-  const className = `${BASE} ${TONES[tone]} ${fullWidth ? 'col-span-2' : ''}`;
+  // w-full covers standalone use (e.g. the hero card, no grid parent); col-span-2 covers use inside a 2-column card footer grid. Harmless together either way.
+  const className = `${BASE} ${TONES[tone]} ${fullWidth ? 'w-full col-span-2' : ''}`;
 
   if (to) {
     return (
