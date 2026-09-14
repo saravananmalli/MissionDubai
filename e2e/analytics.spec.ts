@@ -15,7 +15,8 @@ async function addLinkedInApplication(page: import('@playwright/test').Page, com
   await page.getByRole('button', { name: 'Skip' }).click(); // location, optional
   await page.getByRole('button', { name: "Skip - I'll update later" }).click();
   await page.getByRole('button', { name: 'Skip - I need to ask' }).click();
-  await expect(page.getByRole('heading', { name: company })).toBeVisible({ timeout: 10_000 });
+  // No dedicated card for it on this page anymore — it shows up in "Applied — Awaiting Response" instead.
+  await expect(page.getByRole('link', { name: new RegExp(company) })).toBeVisible({ timeout: 10_000 });
 }
 
 async function addOffer(

@@ -7,9 +7,10 @@ import { Chip } from '@/components/Chip';
 import { SecondaryButton } from '@/components/Button';
 import { ErrorState } from '@/components/ErrorState';
 import { SecondaryPageHeader } from '@/components/SecondaryPageHeader';
-import { useApplication, useApplicationEvents, useSubmitStatusUpdate } from '@/domains/applications/api';
+import { useApplication, useApplicationEvents, useApplicationVisits, useSubmitStatusUpdate } from '@/domains/applications/api';
 import { useInterviewsForApplication } from '@/domains/interviews/api';
 import { createFinalOutcomeFlow, createFollowUpFlow, createResumeFlow } from '@/domains/applications/flowConfig';
+import { createVisitFlow } from '@/domains/applications/visitFlowConfig';
 import { createInterviewRoundFlow } from '@/domains/interviews/flowConfig';
 import { ApplicationEditForm } from '@/domains/applications/components/ApplicationEditForm';
 import { RoundsTimeline } from '@/domains/applications/components/RoundsTimeline';
@@ -35,7 +36,7 @@ const STATUS_OPTIONS: ApplicationStatus[] = [
   'closed',
 ];
 
-type ActivePanel = 'edit' | 'interview' | 'followup' | 'resume' | 'outcome' | null;
+type ActivePanel = 'edit' | 'interview' | 'followup' | 'resume' | 'outcome' | 'visit' | null;
 
 export default function ApplicationDetailPage() {
   const { applicationId } = useParams<{ applicationId: string }>();
@@ -43,6 +44,7 @@ export default function ApplicationDetailPage() {
   const applicationQuery = useApplication(applicationId);
   const interviewsQuery = useInterviewsForApplication(applicationId);
   const eventsQuery = useApplicationEvents(applicationId);
+  const visitsQuery = useApplicationVisits(applicationId);
   const statusMutation = useSubmitStatusUpdate(tripQuery.data?.id);
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
@@ -76,6 +78,7 @@ export default function ApplicationDetailPage() {
   const application = applicationQuery.data;
   const interviews = interviewsQuery.data ?? [];
   const events = eventsQuery.data ?? [];
+  const visits = visitsQuery.data ?? [];
   const recommendations = getApplicationRecommendations(application, interviews, events);
 
   function togglePanel(panel: ActivePanel) {
@@ -86,6 +89,7 @@ export default function ApplicationDetailPage() {
     setActivePanel(null);
     void interviewsQuery.refetch();
     void eventsQuery.refetch();
+    void visitsQuery.refetch();
     void applicationQuery.refetch();
   }
 
@@ -130,6 +134,9 @@ export default function ApplicationDetailPage() {
           <SecondaryButton type="button" onClick={() => togglePanel('outcome')}>
             Set Final Outcome
           </SecondaryButton>
+          <SecondaryButton type="button" onClick={() => togglePanel('visit')}>
+            + Add Visit
+          </SecondaryButton>
         </div>
 
         {activePanel === 'edit' && (
@@ -141,6 +148,7 @@ export default function ApplicationDetailPage() {
         {activePanel === 'followup' && <ChatFlow flow={createFollowUpFlow(application.id)} onFinished={closePanel} />}
         {activePanel === 'resume' && <ChatFlow flow={createResumeFlow(application.id)} onFinished={closePanel} />}
         {activePanel === 'outcome' && <ChatFlow flow={createFinalOutcomeFlow(application.id)} onFinished={closePanel} />}
+        {activePanel === 'visit' && <ChatFlow flow={createVisitFlow(application.id)} onFinished={closePanel} />}
 
         <Card title="Job Details">
           <p className="text-sm text-text-secondary">Source: {formatSourceLabel(application.source, application.source_name)}</p>
@@ -160,11 +168,30 @@ export default function ApplicationDetailPage() {
               Salary: {application.salary_min_aed?.toLocaleString()}–{application.salary_max_aed?.toLocaleString()} AED/month
             </p>
           )}
-          <p className="text-sm text-text-secondary">Visa sponsorship: {formatEnumLabel(application.visa_sponsorship)}</p>
+          {application.visa_sponsorship === 'need_to_ask' ? (
+            <Chip tone="warning">⚠️ Visa sponsorship: (Need to ask)</Chip>
+          ) : (
+            <p className="text-sm text-text-secondary">Visa sponsorship: {formatEnumLabel(application.visa_sponsorship)}</p>
+          )}
           {application.contact_name ? (
             <p className="text-sm text-text-secondary">Contact: {application.contact_name}</p>
           ) : (
             <Chip tone="warning">⚠️ Contact: (Not added)</Chip>
+          )}
+        </Card>
+
+        <Card title="Company Visits">
+          {visits.length === 0 ? (
+            <p className="text-sm text-text-secondary">No visits logged yet.</p>
+          ) : (
+            <div className="flex flex-col gap-1 text-sm text-text-secondary">
+              {visits.map((visit) => (
+                <p key={visit.id}>
+                  {visit.visit_date} · {visit.purpose.replace('_', ' ')}
+                  {visit.photos.length > 0 && ` · ${visit.photos.length} photo${visit.photos.length === 1 ? '' : 's'}`}
+                </p>
+              ))}
+            </div>
           )}
         </Card>
 

@@ -27,11 +27,10 @@ test.describe('application detail page (mock backend)', () => {
     await page.getByRole('button', { name: 'Skip' }).click(); // location
     await page.getByRole('button', { name: "Skip - I'll update later" }).click();
     await page.getByRole('button', { name: 'Skip - I need to ask' }).click();
-    await expect(page.getByRole('heading', { name: 'Tech Corp UAE' })).toBeVisible({ timeout: 10_000 });
+    // No dedicated card for it on this page anymore — it shows up in "Applied — Awaiting Response" instead.
+    await expect(page.getByRole('link', { name: /Tech Corp UAE/ })).toBeVisible({ timeout: 10_000 });
 
-    // exact: the "All Applications" list card links via the position title alone; the new "Applied — Awaiting Response"
-    // dashboard section above it also links to the same page but with a longer combined accessible name.
-    await page.getByRole('link', { name: 'Senior Developer', exact: true }).click();
+    await page.getByRole('link', { name: /Tech Corp UAE/ }).click();
     await expect(page.getByRole('heading', { name: 'Interview Rounds' })).toBeVisible();
     await expect(page.getByText('No interview rounds yet.')).toBeVisible();
 

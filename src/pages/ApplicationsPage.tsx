@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, BarChart3, Briefcase, Calendar, Camera, Send } from 'lucide-react';
+import { ArrowRight, BarChart3, Calendar, Camera, Send } from 'lucide-react';
 import { ChatFlow } from '@/chat-flow';
 import { ErrorState } from '@/components/ErrorState';
 import { PrimaryPageHeader } from '@/components/PrimaryPageHeader';
@@ -8,7 +8,6 @@ import { EmptyState } from '@/components/EmptyState';
 import { ProgressBar, StatusPill } from '@/components/agents';
 import { applicationFlow } from '@/domains/applications/flowConfig';
 import { useApplications } from '@/domains/applications/api';
-import { ApplicationCard } from '@/domains/applications/components/ApplicationCard';
 import { computeSourceBreakdown, formatEnumLabel } from '@/domains/applications/utils';
 import { computeApplicationFunnel } from '@/domains/analytics/utils';
 import { useInterviews } from '@/domains/interviews/api';
@@ -337,18 +336,6 @@ export default function ApplicationsPage() {
               </details>
             )}
 
-            {/* All applications (full list, with visits) — a plain div, not a <section>: nesting it inside
-                a landmark section would make any `section` locator scoped to one company ambiguous, since
-                it would match both this wrapper and that company's own Card <section> underneath it. */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-zinc-400" aria-hidden="true" />
-                <h2 className="text-sm font-extrabold tracking-tight text-white">All Applications</h2>
-              </div>
-              {applications.map((application) => (
-                <ApplicationCard key={application.id} application={application} onVisitAdded={() => void applicationsQuery.refetch()} />
-              ))}
-            </div>
           </>
         )}
 

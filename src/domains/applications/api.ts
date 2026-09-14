@@ -88,6 +88,32 @@ export function useApplication(applicationId: string | undefined) {
   });
 }
 
+export async function fetchApplicationVisits(applicationId: string): Promise<CompanyVisitWithPhotos[]> {
+  const { data: visits, error: visitsError } = await supabase
+    .from('company_visits')
+    .select('*')
+    .eq('application_id', applicationId)
+    .order('visit_date', { ascending: true });
+  if (visitsError) throw visitsError;
+
+  const visitIds = (visits ?? []).map((v) => v.id);
+  const { data: photos, error: photosError } =
+    visitIds.length > 0
+      ? await supabase.from('visit_photos').select('*').in('visit_id', visitIds)
+      : { data: [] as VisitPhoto[], error: null };
+  if (photosError) throw photosError;
+
+  return (visits ?? []).map((visit) => ({ ...visit, photos: (photos ?? []).filter((p) => p.visit_id === visit.id) }));
+}
+
+export function useApplicationVisits(applicationId: string | undefined) {
+  return useQuery({
+    queryKey: ['application-visits', applicationId],
+    queryFn: () => fetchApplicationVisits(applicationId!),
+    enabled: Boolean(applicationId),
+  });
+}
+
 /**
  * Every mutation that changes an application's real-world state calls this
  * so the Timeline (spec §11) can never drift from what actually happened —
