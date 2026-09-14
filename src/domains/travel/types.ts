@@ -16,3 +16,20 @@ export interface TravelFlowAnswers extends Record<string, unknown> {
   pgAddress: string;
   pgMonthlyRentAed: number;
 }
+
+export type AccommodationEditAnswers = Partial<{
+  name: string;
+  address: string;
+  checkInDate: string;
+  checkOutDate: string | null;
+  monthlyRentAed: number;
+}>;
+
+export type VisaEditAnswers = Partial<{
+  visaType: VisaTypeChoice;
+  feeAed: number;
+  durationDays: number;
+  issueDate: string;
+  expiryDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+}>;

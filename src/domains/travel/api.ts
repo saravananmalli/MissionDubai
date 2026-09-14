@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { getOrCreateCurrentTrip } from '@/lib/trips';
 import type { Database } from '@/lib/database.types';
-import type { TravelFlowAnswers } from '@/domains/travel/types';
+import type { AccommodationEditAnswers, TravelFlowAnswers, VisaEditAnswers } from '@/domains/travel/types';
 
 export type Flight = Database['public']['Tables']['flights']['Row'];
 export type Visa = Database['public']['Tables']['visas']['Row'];
@@ -116,6 +116,61 @@ export function useSubmitTravelFlow() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['trips', 'current'] });
       void queryClient.invalidateQueries({ queryKey: ['travel-summary'] });
+    },
+  });
+}
+
+export async function updateAccommodation(
+  accommodationId: string,
+  patch: Database['public']['Tables']['accommodations']['Update'],
+): Promise<void> {
+  const { error } = await supabase.from('accommodations').update(patch).eq('id', accommodationId);
+  if (error) throw error;
+}
+
+export async function submitAccommodationEdit(accommodationId: string, answers: AccommodationEditAnswers): Promise<void> {
+  await updateAccommodation(accommodationId, {
+    name: answers.name,
+    address: answers.address,
+    check_in_date: answers.checkInDate,
+    check_out_date: answers.checkOutDate,
+    monthly_rent_aed: answers.monthlyRentAed,
+  });
+}
+
+export function useSubmitAccommodationEdit(tripId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ accommodationId, answers }: { accommodationId: string; answers: AccommodationEditAnswers }) =>
+      submitAccommodationEdit(accommodationId, answers),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['travel-summary', tripId] });
+    },
+  });
+}
+
+export async function updateVisa(visaId: string, patch: Database['public']['Tables']['visas']['Update']): Promise<void> {
+  const { error } = await supabase.from('visas').update(patch).eq('id', visaId);
+  if (error) throw error;
+}
+
+export async function submitVisaEdit(visaId: string, answers: VisaEditAnswers): Promise<void> {
+  await updateVisa(visaId, {
+    visa_type: answers.visaType,
+    fee_aed: answers.feeAed,
+    duration_days: answers.durationDays,
+    issue_date: answers.issueDate,
+    expiry_date: answers.expiryDate,
+    status: answers.status,
+  });
+}
+
+export function useSubmitVisaEdit(tripId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ visaId, answers }: { visaId: string; answers: VisaEditAnswers }) => submitVisaEdit(visaId, answers),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['travel-summary', tripId] });
     },
   });
 }

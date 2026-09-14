@@ -1,15 +1,22 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChatFlow } from '@/chat-flow';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
+import { SecondaryButton } from '@/components/Button';
 import { SecondaryPageHeader } from '@/components/SecondaryPageHeader';
 import { travelFlow } from '@/domains/travel/flowConfig';
 import { useTravelSummary } from '@/domains/travel/api';
+import { AccommodationEditForm } from '@/domains/travel/components/AccommodationEditForm';
+import { VisaEditForm } from '@/domains/travel/components/VisaEditForm';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
+
+type ActivePanel = 'edit-visa' | 'edit-accommodation' | null;
 
 export default function TravelPage() {
   const tripQuery = useCurrentTrip();
   const summaryQuery = useTravelSummary(tripQuery.data?.id);
+  const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const header = <SecondaryPageHeader title="Travel & Accommodation" />;
 
   if (tripQuery.isLoading) {
@@ -72,6 +79,11 @@ export default function TravelPage() {
     (summary!.visa?.fee_aed ?? 0) +
     (summary!.accommodation?.monthly_rent_aed ?? 0);
 
+  function closePanel() {
+    setActivePanel(null);
+    void summaryQuery.refetch();
+  }
+
   return (
     <>
       {header}
@@ -92,23 +104,40 @@ export default function TravelPage() {
           </Card>
         ))}
 
-        {summary!.visa && (
-          <Card title="Visa">
-            <p className="text-base font-medium capitalize text-ink-800">{summary!.visa.visa_type} visa</p>
-            <p className="text-sm text-ink-500">
-              {summary!.visa.fee_aed} AED · {summary!.visa.status}
-            </p>
-            <p className="text-sm text-ink-500">Expires {summary!.visa.expiry_date}</p>
-          </Card>
-        )}
+        {summary!.visa &&
+          (activePanel === 'edit-visa' ? (
+            <VisaEditForm visa={summary!.visa} tripId={tripQuery.data?.id} onSaved={closePanel} onCancel={() => setActivePanel(null)} />
+          ) : (
+            <Card title="Visa">
+              <p className="text-base font-medium capitalize text-ink-800">{summary!.visa.visa_type} visa</p>
+              <p className="text-sm text-ink-500">
+                {summary!.visa.fee_aed} AED · {summary!.visa.status}
+              </p>
+              <p className="text-sm text-ink-500">Expires {summary!.visa.expiry_date}</p>
+              <SecondaryButton type="button" className="self-start" onClick={() => setActivePanel('edit-visa')}>
+                Edit
+              </SecondaryButton>
+            </Card>
+          ))}
 
-        {summary!.accommodation && (
-          <Card title="PG Accommodation">
-            <p className="text-base font-medium text-ink-800">{summary!.accommodation.name}</p>
-            <p className="text-sm text-ink-500">{summary!.accommodation.address}</p>
-            <p className="text-sm text-ink-500">{summary!.accommodation.monthly_rent_aed} AED / month</p>
-          </Card>
-        )}
+        {summary!.accommodation &&
+          (activePanel === 'edit-accommodation' ? (
+            <AccommodationEditForm
+              accommodation={summary!.accommodation}
+              tripId={tripQuery.data?.id}
+              onSaved={closePanel}
+              onCancel={() => setActivePanel(null)}
+            />
+          ) : (
+            <Card title="PG Accommodation">
+              <p className="text-base font-medium text-ink-800">{summary!.accommodation.name}</p>
+              <p className="text-sm text-ink-500">{summary!.accommodation.address}</p>
+              <p className="text-sm text-ink-500">{summary!.accommodation.monthly_rent_aed.toLocaleString()} AED / month</p>
+              <SecondaryButton type="button" className="self-start" onClick={() => setActivePanel('edit-accommodation')}>
+                Edit
+              </SecondaryButton>
+            </Card>
+          ))}
 
         <Card title="Total Trip Cost So Far">
           <p className="text-2xl font-bold text-text-primary">{totalCost.toLocaleString()} AED</p>

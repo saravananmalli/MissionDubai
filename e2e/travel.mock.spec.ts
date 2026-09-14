@@ -49,6 +49,22 @@ test.describe('travel/visa/PG flow (mock backend)', () => {
     await expect(page.getByText('Dubai PG House')).toBeVisible();
     await expect(page.getByText('6,100 AED')).toBeVisible(); // 1500 + 100 + 4500
 
+    // Editing the accommodation updates both its card and the total cost.
+    const accommodationCard = page.locator('section', { has: page.getByRole('heading', { name: 'PG Accommodation' }) });
+    await accommodationCard.getByRole('button', { name: 'Edit' }).click();
+    await page.getByLabel('Monthly rent (AED)').fill('5000');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('5,000 AED / month')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('6,600 AED')).toBeVisible(); // 1500 + 100 + 5000
+
+    // Editing the visa updates its card too.
+    const visaCard = page.locator('section', { has: page.getByRole('heading', { name: 'Visa' }) });
+    await visaCard.getByRole('button', { name: 'Edit' }).click();
+    await page.getByLabel('Status').selectOption('approved');
+    await page.getByLabel('Fee (AED)').fill('120');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('120 AED · approved')).toBeVisible({ timeout: 10_000 });
+
     await page.goto('/');
     await expect(page.getByText(/\d+ days? remaining on visa/i)).toBeVisible({ timeout: 10_000 });
   });
