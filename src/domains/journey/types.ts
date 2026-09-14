@@ -1,6 +1,7 @@
 import type { JourneyProgress, FunnelStage } from '@/domains/analytics/utils';
 import type { BudgetAlertLevel, BurnRateResult } from '@/domains/expenses/utils';
 import type { OfferWithCompany } from '@/domains/analytics/api';
+import type { PipelineBreakdown } from '@/domains/applications/utils';
 import type { Trip } from '@/lib/trips';
 
 export interface JourneyVisaStatus {
@@ -33,6 +34,10 @@ export interface JourneyApplications {
   funnel: FunnelStage[];
   /** Days since the most recently applied-to company, or null if there are no applications. */
   daysSinceLastApplication: number | null;
+  /** Spec §12's 7-stage dashboard breakdown (Saved/Applied/Interview/Final Round/Offer/Rejected/No Response). */
+  pipeline: PipelineBreakdown;
+  /** Rule-based, real-data-only recommendations — see domains/applications/recommendations.ts. */
+  recommendations: string[];
 }
 
 export interface JourneyBudgetStatus {
@@ -64,6 +69,7 @@ export interface JourneyState {
   budget: JourneyBudgetStatus | null;
   hasExpenseToday: boolean;
   pendingOffers: OfferWithCompany[];
+  overdueFollowUpCount: number;
   /** False before the user has logged anything at all (pre-onboarding). */
   hasAnyData: boolean;
 }

@@ -9,7 +9,7 @@ import type { JourneyState } from '@/domains/journey/types';
  * something it isn't.
  */
 
-export type CopilotIntent = 'interview' | 'visa' | 'budget' | 'offers' | 'accommodation' | 'applications' | 'status';
+export type CopilotIntent = 'interview' | 'visa' | 'budget' | 'offers' | 'accommodation' | 'applications' | 'followups' | 'status';
 
 export interface QuickPrompt {
   intent: CopilotIntent;
@@ -18,6 +18,7 @@ export interface QuickPrompt {
 
 export function getQuickPrompts(state: JourneyState): QuickPrompt[] {
   const prompts: QuickPrompt[] = [];
+  if (state.overdueFollowUpCount > 0) prompts.push({ intent: 'followups', label: 'Follow-ups due' });
   if (state.nextInterview) prompts.push({ intent: 'interview', label: `Prep for ${state.nextInterview.companyName}` });
   if (state.visa && !state.visa.isExpired && state.visa.daysUntilExpiry <= 14) prompts.push({ intent: 'visa', label: 'Visa renewal steps' });
   if (state.pendingOffers.length >= 2) prompts.push({ intent: 'offers', label: 'Compare my offers' });
@@ -35,6 +36,7 @@ const KEYWORDS: Record<Exclude<CopilotIntent, 'status'>, string[]> = {
   offers: ['offer', 'compare', 'salary', 'negotiat'],
   accommodation: ['lease', 'rent', 'accommodation', 'pg', 'stay'],
   applications: ['application', 'job', 'pipeline', 'lead', 'apply'],
+  followups: ['follow-up', 'follow up', 'followup'],
 };
 
 export function resolveIntent(text: string): CopilotIntent {
@@ -100,7 +102,14 @@ function applicationsReply(state: JourneyState): string {
   if (state.applications.total === 0) return "No applications logged yet. Add one from the Jobs tab and I'll track your pipeline here.";
   const interviewed = state.applications.funnel[1]?.count ?? 0;
   const offered = state.applications.funnel[2]?.count ?? 0;
-  return `You have ${state.applications.total} application${state.applications.total === 1 ? '' : 's'} — ${interviewed} interviewed, ${offered} offered so far.`;
+  const base = `You have ${state.applications.total} application${state.applications.total === 1 ? '' : 's'} — ${interviewed} interviewed, ${offered} offered so far.`;
+  const recommendation = state.applications.recommendations[0];
+  return recommendation ? `${base} ${recommendation}` : base;
+}
+
+function followupsReply(state: JourneyState): string {
+  if (state.overdueFollowUpCount === 0) return "No follow-ups overdue right now — I'll flag it here once one is.";
+  return `You have ${state.overdueFollowUpCount} follow-up${state.overdueFollowUpCount === 1 ? '' : 's'} overdue. Open an application's detail page to mark it complete or reschedule.`;
 }
 
 function statusReply(state: JourneyState): string {
@@ -125,6 +134,8 @@ export function getCopilotReply(state: JourneyState, intent: CopilotIntent): str
       return accommodationReply(state);
     case 'applications':
       return applicationsReply(state);
+    case 'followups':
+      return followupsReply(state);
     case 'status':
       return statusReply(state);
   }

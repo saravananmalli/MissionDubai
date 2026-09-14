@@ -14,6 +14,7 @@ const AiHomePage = lazy(() => import('@/pages/AiHomePage'));
 const AgentsHubPage = lazy(() => import('@/pages/AgentsHubPage'));
 const TravelPage = lazy(() => import('@/pages/TravelPage'));
 const ApplicationsPage = lazy(() => import('@/pages/ApplicationsPage'));
+const ApplicationDetailPage = lazy(() => import('@/pages/ApplicationDetailPage'));
 const MapPage = lazy(() => import('@/pages/MapPage'));
 const PhotoGalleryPage = lazy(() => import('@/pages/PhotoGalleryPage'));
 const InterviewCalendarPage = lazy(() => import('@/pages/InterviewCalendarPage'));
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
           { path: '/agents', element: withSuspense(<AgentsHubPage />) },
           { path: '/travel', element: withSuspense(<TravelPage />) },
           { path: '/applications', element: withSuspense(<ApplicationsPage />) },
+          { path: '/applications/:applicationId', element: withSuspense(<ApplicationDetailPage />) },
           { path: '/map', element: withSuspense(<MapPage />) },
           { path: '/photos', element: withSuspense(<PhotoGalleryPage />) },
           { path: '/interviews', element: withSuspense(<InterviewCalendarPage />) },

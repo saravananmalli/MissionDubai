@@ -121,6 +121,7 @@ const scoutRadar: AgentDefinition = {
   accent: 'pink',
   getStatus(state) {
     if (state.applications.total === 0) return { tone: 'neutral', label: 'NOT STARTED' };
+    if (state.overdueFollowUpCount > 0) return { tone: 'warning', label: 'FOLLOW-UP DUE' };
     if (state.applications.daysSinceLastApplication !== null && state.applications.daysSinceLastApplication >= 5) {
       return { tone: 'warning', label: 'STALLED' };
     }
@@ -139,8 +140,20 @@ const scoutRadar: AgentDefinition = {
         {state.applications.total === 0 ? (
           <InfoPanelEmpty>No applications logged yet.</InfoPanelEmpty>
         ) : (
-          <StatGrid stats={state.applications.funnel.map((stage) => ({ label: stage.label, value: String(stage.count) }))} />
+          <StatGrid stats={state.applications.pipeline.stages.map((stage) => ({ label: stage.label, value: String(stage.count) }))} />
         )}
+
+        {state.overdueFollowUpCount > 0 && (
+          <AlertBanner tone="warning" icon={AlertTriangle}>
+            {state.overdueFollowUpCount} follow-up{state.overdueFollowUpCount === 1 ? '' : 's'} overdue.
+          </AlertBanner>
+        )}
+
+        {state.applications.recommendations.map((recommendation) => (
+          <AlertBanner key={recommendation} tone="info" icon={Radar}>
+            {recommendation}
+          </AlertBanner>
+        ))}
 
         {sponsoredOfferCount > 0 && (
           <AlertBanner tone="info" icon={Award}>

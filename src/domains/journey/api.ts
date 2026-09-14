@@ -1,4 +1,4 @@
-import { useApplications } from '@/domains/applications/api';
+import { useApplications, useFollowUps } from '@/domains/applications/api';
 import { useOffers } from '@/domains/analytics/api';
 import { useBudget, useExpenses } from '@/domains/expenses/api';
 import { useInterviews } from '@/domains/interviews/api';
@@ -26,6 +26,7 @@ export function useJourneyState(): UseJourneyStateResult {
   const budgetQuery = useBudget(tripId);
   const expensesQuery = useExpenses(tripId);
   const offersQuery = useOffers(tripId);
+  const followUpsQuery = useFollowUps(tripId);
 
   const data = deriveJourneyState({
     trip: tripQuery.data,
@@ -35,6 +36,7 @@ export function useJourneyState(): UseJourneyStateResult {
     budget: budgetQuery.data,
     expenses: expensesQuery.data,
     offers: offersQuery.data,
+    followUps: followUpsQuery.data,
   });
 
   const dependentQueriesLoading =
@@ -44,7 +46,8 @@ export function useJourneyState(): UseJourneyStateResult {
       interviewsQuery.isLoading ||
       budgetQuery.isLoading ||
       expensesQuery.isLoading ||
-      offersQuery.isLoading);
+      offersQuery.isLoading ||
+      followUpsQuery.isLoading);
 
   return {
     data,
@@ -56,7 +59,8 @@ export function useJourneyState(): UseJourneyStateResult {
       interviewsQuery.isError ||
       budgetQuery.isError ||
       expensesQuery.isError ||
-      offersQuery.isError,
+      offersQuery.isError ||
+      followUpsQuery.isError,
     refetch: () => {
       void tripQuery.refetch();
       void travelSummaryQuery.refetch();
@@ -65,6 +69,7 @@ export function useJourneyState(): UseJourneyStateResult {
       void budgetQuery.refetch();
       void expensesQuery.refetch();
       void offersQuery.refetch();
+      void followUpsQuery.refetch();
     },
   };
 }

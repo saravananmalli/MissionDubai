@@ -22,6 +22,7 @@ test.describe('applications + company visits', () => {
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByLabel('Position title?').fill('Senior Developer');
     await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Skip' }).click(); // location, optional
     await page.getByRole('button', { name: "Skip - I'll update later" }).click();
     await page.getByRole('button', { name: 'Skip - I need to ask' }).click();
 
@@ -36,6 +37,7 @@ test.describe('applications + company visits', () => {
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByLabel('Position title?').fill('Product Manager');
     await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Skip' }).click(); // location, optional
     await page.getByRole('button', { name: '200-250k' }).click();
     await page.getByRole('button', { name: 'YES' }).click();
     await page.getByLabel('Contact person name?').fill('Sarah Khan');
@@ -53,6 +55,7 @@ test.describe('applications + company visits', () => {
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByLabel('Position title?').fill('Another Role');
     await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Skip' }).click(); // location, optional
     await page.getByRole('button', { name: "Skip - I'll update later" }).click();
     await page.getByRole('button', { name: 'Skip - I need to ask' }).click();
     await expect(page.getByText(/already applied to Tech Corp UAE/i)).toBeVisible({ timeout: 10_000 });
@@ -64,7 +67,7 @@ test.describe('applications + company visits', () => {
     await page.getByRole('button', { name: 'Today' }).click();
     await page.getByLabel('Time?').fill('10:00');
     await page.getByRole('button', { name: 'Send' }).click();
-    await page.getByRole('button', { name: 'Interview' }).click();
+    await page.getByRole('group', { name: 'Purpose?' }).getByRole('button', { name: 'Interview' }).click(); // visit purpose, not the pipeline filter tab
     await page.getByRole('button', { name: 'Skip' }).first().click();
     await page.getByRole('button', { name: 'Skip' }).click();
 

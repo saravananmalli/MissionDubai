@@ -102,7 +102,7 @@ describe('AgentsHubPage', () => {
           hasAnyData: false,
           accommodation: null,
           visa: null,
-          applications: { total: 0, funnel: [], daysSinceLastApplication: null },
+          applications: { total: 0, funnel: [], daysSinceLastApplication: null, pipeline: { stages: [] }, recommendations: [] },
           nextInterview: null,
           budget: null,
           pendingOffers: [],

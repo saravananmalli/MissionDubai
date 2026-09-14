@@ -99,4 +99,32 @@ describe('ChatFlow', () => {
     await user.click(screen.getByRole('button', { name: 'Confirm' }));
     await waitFor(() => expect(onComplete).toHaveBeenCalledWith({ reminders: ['24h', '1h'] }));
   });
+
+  it('does not carry typed text over into the next text-type step', async () => {
+    const user = userEvent.setup();
+    const onComplete = vi.fn().mockResolvedValue(undefined);
+    const flow: FlowDefinition<{ first?: string; second?: string }> = {
+      id: 'consecutive-text-demo',
+      onComplete,
+      steps: [
+        { id: 'first', type: 'text', prompt: 'First field?' },
+        { id: 'second', type: 'text', prompt: 'Second field?' },
+      ],
+    };
+
+    render(<ChatFlow flow={flow} />);
+
+    await user.type(screen.getByLabelText('First field?'), 'Tech Corp UAE');
+    await user.click(screen.getByRole('button', { name: 'Send' }));
+
+    // Regression: without a per-step key, the text input is the same mounted
+    // component instance across steps, so its local (uncontrolled) value
+    // used to leak from one field into the next.
+    expect(await screen.findByLabelText('Second field?')).toHaveValue('');
+
+    await user.type(screen.getByLabelText('Second field?'), 'Senior Developer');
+    await user.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() => expect(onComplete).toHaveBeenCalledWith({ first: 'Tech Corp UAE', second: 'Senior Developer' }));
+  });
 });

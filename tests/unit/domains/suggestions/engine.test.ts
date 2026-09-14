@@ -11,7 +11,7 @@ describe('rankSuggestions', () => {
     const state = makeJourneyState({
       visa: { issueDate: '2026-08-01', durationDays: 60, expiryDate: '2026-09-16', daysUntilExpiry: 3, isExpired: false }, // priority 95
       hasExpenseToday: false, // priority 40
-      applications: { total: 3, funnel: [], daysSinceLastApplication: 6 }, // priority 60
+      applications: { total: 3, funnel: [], daysSinceLastApplication: 6, pipeline: { stages: [] }, recommendations: [] }, // priority 60
     });
     const ranked = rankSuggestions(state);
     expect(ranked.map((s) => s.priority)).toEqual([95, 60, 40]);
@@ -21,7 +21,7 @@ describe('rankSuggestions', () => {
     const state = makeJourneyState({
       visa: { issueDate: '2026-08-01', durationDays: 60, expiryDate: '2026-09-16', daysUntilExpiry: 3, isExpired: false },
       hasExpenseToday: false,
-      applications: { total: 3, funnel: [], daysSinceLastApplication: 6 },
+      applications: { total: 3, funnel: [], daysSinceLastApplication: 6, pipeline: { stages: [] }, recommendations: [] },
       upcomingInterviews: [
         { id: 'i1', companyName: 'Tech Corp', positionTitle: 'Dev', interviewDate: '2026-09-14', interviewTime: '10:00', hoursUntil: 10 },
       ],

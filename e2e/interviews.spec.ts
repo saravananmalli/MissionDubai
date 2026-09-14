@@ -20,6 +20,7 @@ test.describe('interviews', () => {
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByLabel('Position title?').fill('Senior Developer');
     await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Skip' }).click(); // location, optional
     await page.getByRole('button', { name: "Skip - I'll update later" }).click();
     await page.getByRole('button', { name: 'Skip - I need to ask' }).click();
     await expect(page.getByRole('heading', { name: 'Tech Corp UAE' })).toBeVisible({ timeout: 10_000 });

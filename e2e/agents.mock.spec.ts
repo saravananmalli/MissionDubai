@@ -14,6 +14,7 @@ async function addLinkedInApplication(page: import('@playwright/test').Page, com
   await page.getByRole('button', { name: 'Send' }).click();
   await page.getByLabel('Position title?').fill(position);
   await page.getByRole('button', { name: 'Send' }).click();
+  await page.getByRole('button', { name: 'Skip' }).click(); // location, optional
   await page.getByRole('button', { name: "Skip - I'll update later" }).click();
   await page.getByRole('button', { name: 'Skip - I need to ask' }).click();
   await expect(page.getByRole('heading', { name: company })).toBeVisible({ timeout: 10_000 });

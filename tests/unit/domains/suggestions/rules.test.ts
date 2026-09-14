@@ -63,17 +63,17 @@ describe('interviewUpcomingRule', () => {
 
 describe('noApplicationsRecentlyRule', () => {
   it('does not fire under the 5-day threshold', () => {
-    expect(noApplicationsRecentlyRule(makeJourneyState({ applications: { total: 3, funnel: [], daysSinceLastApplication: 4 } }))).toBeNull();
+    expect(noApplicationsRecentlyRule(makeJourneyState({ applications: { total: 3, funnel: [], daysSinceLastApplication: 4, pipeline: { stages: [] }, recommendations: [] } }))).toBeNull();
   });
 
   it('fires at or beyond the 5-day threshold', () => {
     expect(
-      noApplicationsRecentlyRule(makeJourneyState({ applications: { total: 3, funnel: [], daysSinceLastApplication: 5 } })),
+      noApplicationsRecentlyRule(makeJourneyState({ applications: { total: 3, funnel: [], daysSinceLastApplication: 5, pipeline: { stages: [] }, recommendations: [] } })),
     ).not.toBeNull();
   });
 
   it('does not fire when there have never been any applications (first-run prompt covers that)', () => {
-    expect(noApplicationsRecentlyRule(makeJourneyState({ applications: { total: 0, funnel: [], daysSinceLastApplication: null } }))).toBeNull();
+    expect(noApplicationsRecentlyRule(makeJourneyState({ applications: { total: 0, funnel: [], daysSinceLastApplication: null, pipeline: { stages: [] }, recommendations: [] } }))).toBeNull();
   });
 });
 

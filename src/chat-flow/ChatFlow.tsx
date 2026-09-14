@@ -56,6 +56,11 @@ export function ChatFlow<A extends Record<string, unknown>>({ flow, onFinished }
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface/[0.85] p-5 shadow-card backdrop-blur-md">
           <p className="font-sans text-lg font-semibold text-text-primary">{chat.prompt}</p>
           <StepRenderer
+            // Keyed by step id so each step gets a fresh input component instance —
+            // without this, consecutive text/date/slider/multi-select steps reuse
+            // the same mounted component and its internal (uncontrolled) local
+            // state, so whatever was typed into one field bleeds into the next.
+            key={chat.currentStep.id}
             step={chat.currentStep}
             options={chat.options}
             validationError={chat.validationError}

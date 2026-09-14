@@ -2,8 +2,10 @@ import { computeApplicationFunnel, computeJourneyProgress } from '@/domains/anal
 import { computeBurnRate, getBudgetAlertLevel } from '@/domains/expenses/utils';
 import { hoursUntilInterview } from '@/domains/interviews/utils';
 import { daysUntil } from '@/domains/travel/utils';
+import { computePipelineBreakdown } from '@/domains/applications/utils';
+import { getGlobalRecommendations } from '@/domains/applications/recommendations';
 import type { OfferWithCompany } from '@/domains/analytics/api';
-import type { ApplicationWithVisits } from '@/domains/applications/api';
+import type { ApplicationWithVisits, FollowUp } from '@/domains/applications/api';
 import type { Budget, Expense } from '@/domains/expenses/api';
 import type { InterviewWithApplication } from '@/domains/interviews/api';
 import type { TravelSummary } from '@/domains/travel/api';
@@ -21,6 +23,7 @@ export interface DeriveJourneyStateInput {
   budget: Budget | null | undefined;
   expenses: Expense[] | undefined;
   offers: OfferWithCompany[] | undefined;
+  followUps: FollowUp[] | undefined;
   now?: Date;
 }
 
@@ -50,6 +53,7 @@ export function deriveJourneyState(input: DeriveJourneyStateInput): JourneyState
   const interviews = input.interviews ?? [];
   const expenses = input.expenses ?? [];
   const offers = input.offers ?? [];
+  const followUps = input.followUps ?? [];
   const budget = input.budget ?? null;
   const visaRow = input.travelSummary?.visa ?? null;
   const accommodationRow = input.travelSummary?.accommodation ?? null;
@@ -85,6 +89,11 @@ export function deriveJourneyState(input: DeriveJourneyStateInput): JourneyState
   const lastAppliedDate = applications.map((a) => a.applied_date).sort().at(-1);
   const daysSinceLastApplication = lastAppliedDate ? -daysUntil(lastAppliedDate, now) : null;
 
+  const pipeline = computePipelineBreakdown(applications, interviews);
+  const recommendations = getGlobalRecommendations(applications, interviews, followUps, now);
+  const today = todayISO(now);
+  const overdueFollowUpCount = followUps.filter((f) => f.status === 'pending' && f.due_date < today).length;
+
   const upcomingInterviews: JourneyInterview[] = interviews
     .map((i) => ({
       id: i.id,
@@ -113,7 +122,6 @@ export function deriveJourneyState(input: DeriveJourneyStateInput): JourneyState
       })()
     : null;
 
-  const today = todayISO(now);
   const hasExpenseToday = expenses.some((e) => e.expense_date === today);
   const pendingOffers = offers.filter((o) => o.status === 'pending');
 
@@ -123,12 +131,13 @@ export function deriveJourneyState(input: DeriveJourneyStateInput): JourneyState
     progress,
     visa,
     accommodation,
-    applications: { total: applications.length, funnel, daysSinceLastApplication },
+    applications: { total: applications.length, funnel, daysSinceLastApplication, pipeline, recommendations },
     nextInterview: upcomingInterviews[0] ?? null,
     upcomingInterviews,
     budget: budgetStatus,
     hasExpenseToday,
     pendingOffers,
+    overdueFollowUpCount,
     hasAnyData: Boolean(trip),
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { deriveJourneyState } from '@/domains/journey/deriveJourneyState';
-import type { ApplicationWithVisits } from '@/domains/applications/api';
+import type { ApplicationWithVisits, FollowUp } from '@/domains/applications/api';
 import type { OfferWithCompany } from '@/domains/analytics/api';
 import type { Expense, Budget } from '@/domains/expenses/api';
 import type { InterviewWithApplication } from '@/domains/interviews/api';
@@ -37,8 +37,11 @@ function makeApplication(overrides: Partial<ApplicationWithVisits> = {}): Applic
     trip_id: 'trip-1',
     company_name: 'Tech Corp',
     position_title: 'Senior Developer',
+    location: null,
     source: 'linkedin',
+    source_name: null,
     status: 'applied',
+    final_outcome: null,
     applied_date: '2026-09-01',
     salary_min_aed: null,
     salary_max_aed: null,
@@ -47,6 +50,11 @@ function makeApplication(overrides: Partial<ApplicationWithVisits> = {}): Applic
     contact_name: null,
     contact_email: null,
     contact_phone: null,
+    resume_status: 'not_submitted',
+    resume_version: null,
+    resume_submitted_date: null,
+    cover_letter_submitted: false,
+    application_url: null,
     notes: null,
     created_at: '2026-09-01T00:00:00Z',
     updated_at: '2026-09-01T00:00:00Z',
@@ -63,6 +71,9 @@ function makeInterview(overrides: Partial<InterviewWithApplication> = {}): Inter
     interview_date: '2026-09-14',
     interview_time: '10:00:00',
     type: 'video',
+    round_number: 1,
+    interview_status: 'scheduled',
+    round_result: 'pending',
     interviewer_name: null,
     interviewer_role: null,
     meeting_link: null,
@@ -73,6 +84,7 @@ function makeInterview(overrides: Partial<InterviewWithApplication> = {}): Inter
     outcome: 'pending',
     confidence_rating: null,
     feedback_notes: null,
+    prep_notes: null,
     created_at: '2026-09-01T00:00:00Z',
     updated_at: '2026-09-01T00:00:00Z',
     companyName: 'Tech Corp',
@@ -142,6 +154,7 @@ describe('deriveJourneyState', () => {
       budget: undefined,
       expenses: undefined,
       offers: undefined,
+      followUps: [],
       now: NOW,
     });
     expect(state.hasAnyData).toBe(false);
@@ -159,6 +172,7 @@ describe('deriveJourneyState', () => {
       budget: null,
       expenses: [],
       offers: [],
+      followUps: [],
       now: NOW,
     });
     expect(state.progress.totalDays).toBe(60);
@@ -191,6 +205,7 @@ describe('deriveJourneyState', () => {
       budget: null,
       expenses: [],
       offers: [],
+      followUps: [],
       now: NOW,
     });
     expect(expiring.visa?.daysUntilExpiry).toBe(3);
@@ -210,6 +225,7 @@ describe('deriveJourneyState', () => {
       budget: null,
       expenses: [],
       offers: [],
+      followUps: [],
       now: NOW,
     });
     expect(state.upcomingInterviews.map((i) => i.id)).toEqual(['soonest', 'later']);
@@ -228,6 +244,7 @@ describe('deriveJourneyState', () => {
       budget: null,
       expenses: [],
       offers: [makeOffer({ application_id: 'app-1', status: 'accepted' })],
+      followUps: [],
       now: NOW,
     });
     expect(state.applications.total).toBe(2);
@@ -246,6 +263,7 @@ describe('deriveJourneyState', () => {
       budget: makeBudget({ amount_aed: 10_000 }),
       expenses: [makeExpense({ amount_aed: 5_415, expense_date: '2026-09-13' })],
       offers: [],
+      followUps: [],
       now: NOW,
     });
     expect(state.budget?.percentUsed).toBe(54);
@@ -262,6 +280,7 @@ describe('deriveJourneyState', () => {
       budget: makeBudget(),
       expenses: [makeExpense({ expense_date: '2026-09-01' })],
       offers: [],
+      followUps: [],
       now: NOW,
     });
     expect(state.hasExpenseToday).toBe(false);
@@ -276,8 +295,41 @@ describe('deriveJourneyState', () => {
       budget: null,
       expenses: [],
       offers: [makeOffer({ id: 'pending-1', status: 'pending' }), makeOffer({ id: 'accepted-1', status: 'accepted' })],
+      followUps: [],
       now: NOW,
     });
     expect(state.pendingOffers.map((o) => o.id)).toEqual(['pending-1']);
+  });
+
+  it('builds a 7-stage pipeline breakdown and counts overdue follow-ups', () => {
+    const followUp: FollowUp = {
+      id: 'follow-up-1',
+      user_id: 'user-1',
+      application_id: 'app-2',
+      due_date: '2026-09-01',
+      status: 'pending',
+      notes: null,
+      created_at: '2026-09-01T00:00:00Z',
+      completed_at: null,
+    };
+    const state = deriveJourneyState({
+      trip: makeTrip(),
+      travelSummary: EMPTY_TRAVEL_SUMMARY,
+      applications: [
+        makeApplication({ id: 'app-1', status: 'saved' }),
+        makeApplication({ id: 'app-2', status: 'applied' }),
+        makeApplication({ id: 'app-3', status: 'rejected' }),
+      ],
+      interviews: [makeInterview({ application_id: 'app-3', type: 'final' })],
+      budget: null,
+      expenses: [],
+      offers: [],
+      followUps: [followUp],
+      now: NOW,
+    });
+
+    const stageCounts = Object.fromEntries(state.applications.pipeline.stages.map((s) => [s.label, s.count]));
+    expect(stageCounts).toEqual({ Saved: 1, Applied: 1, Interview: 0, 'Final Round': 1, Offer: 0, Rejected: 0, 'No Response': 0 });
+    expect(state.overdueFollowUpCount).toBe(1);
   });
 });

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import type { Database } from '@/lib/database.types';
+import { logApplicationEvent } from '@/domains/applications/api';
 import type { OfferFlowAnswers } from '@/domains/analytics/types';
 
 export type Offer = Database['public']['Tables']['offers']['Row'];
@@ -55,4 +56,6 @@ export async function submitOfferFlow(answers: OfferFlowAnswers): Promise<void> 
 
   const { error: statusError } = await supabase.from('applications').update({ status: 'offer' }).eq('id', answers.applicationId);
   if (statusError) throw statusError;
+
+  await logApplicationEvent(answers.applicationId, 'offer_received', `Offer received: ${answers.salaryAed.toLocaleString()} AED.`);
 }

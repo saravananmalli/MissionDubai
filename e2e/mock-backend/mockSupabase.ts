@@ -20,6 +20,8 @@ interface SeedTables {
   budgets: unknown[];
   expenses: unknown[];
   offers: unknown[];
+  application_events: unknown[];
+  follow_ups: unknown[];
 }
 
 const seedDataPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'seedData.json');
@@ -60,7 +62,10 @@ const TABLE_DEFAULTS: Partial<Record<TableName, Row>> = {
   visas: { status: 'pending', duration_days: 60 },
   accommodations: { check_out_date: null, lat: null, lng: null },
   applications: {
+    location: null,
     status: 'applied',
+    source_name: null,
+    final_outcome: null,
     salary_status: 'will_update_later',
     visa_sponsorship: 'need_to_ask',
     salary_min_aed: null,
@@ -68,11 +73,19 @@ const TABLE_DEFAULTS: Partial<Record<TableName, Row>> = {
     contact_name: null,
     contact_email: null,
     contact_phone: null,
+    resume_status: 'not_submitted',
+    resume_version: null,
+    resume_submitted_date: null,
+    cover_letter_submitted: false,
+    application_url: null,
     notes: null,
   },
   company_visits: { notes: null, lat: null, lng: null },
   visit_photos: { caption: null },
   interviews: {
+    round_number: 1,
+    interview_status: 'scheduled',
+    round_result: 'pending',
     outcome: 'pending',
     reminder_24h: true,
     reminder_1h: true,
@@ -83,7 +96,10 @@ const TABLE_DEFAULTS: Partial<Record<TableName, Row>> = {
     meeting_link: null,
     confidence_rating: null,
     feedback_notes: null,
+    prep_notes: null,
   },
+  application_events: { metadata: null },
+  follow_ups: { status: 'pending', notes: null, completed_at: null },
   offers: {
     status: 'pending',
     visa_sponsorship: false,
@@ -245,6 +261,8 @@ export async function installMockSupabase(page: Page): Promise<void> {
         id: randomUUID(),
         user_id: user?.id,
         created_at: new Date().toISOString(),
+        // `application_events` uses `occurred_at`, not `created_at`, as its timestamp column.
+        ...(tableName === 'application_events' ? { occurred_at: new Date().toISOString() } : {}),
         ...(TABLE_DEFAULTS[tableName] ?? {}),
         ...row,
       }));

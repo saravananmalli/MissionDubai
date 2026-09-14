@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChatFlow } from '@/chat-flow';
 import { Card } from '@/components/Card';
 import { Chip } from '@/components/Chip';
 import { SecondaryButton } from '@/components/Button';
 import { createVisitFlow } from '@/domains/applications/visitFlowConfig';
+import { formatEnumLabel } from '@/domains/applications/utils';
 import type { ApplicationWithVisits } from '@/domains/applications/api';
 
 export function ApplicationCard({
@@ -18,9 +20,11 @@ export function ApplicationCard({
 
   return (
     <Card title={application.company_name}>
-      <p className="text-base font-medium text-text-primary">{application.position_title}</p>
+      <Link to={`/applications/${application.id}`} className="text-base font-medium text-text-primary underline">
+        {application.position_title}
+      </Link>
       <p className="text-sm text-text-secondary">
-        Applied {application.applied_date} · {application.status}
+        Applied {application.applied_date} · {formatEnumLabel(application.status)}
       </p>
 
       <div className="flex flex-col gap-2 text-sm text-text-secondary">

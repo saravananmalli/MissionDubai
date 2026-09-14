@@ -7,13 +7,51 @@ export type TripStatus = 'planning' | 'active' | 'completed';
 export type FlightDirection = 'outbound' | 'return';
 export type VisaType = 'visit' | 'work' | 'student';
 export type VisaStatus = 'pending' | 'approved' | 'rejected';
-export type ApplicationSource = 'linkedin' | 'job_board' | 'company_site' | 'referral' | 'other';
-export type ApplicationStatus = 'applied' | 'shortlisted' | 'interviewing' | 'offer' | 'rejected' | 'withdrawn';
+export type ApplicationSource = 'linkedin' | 'job_board' | 'company_site' | 'referral' | 'other' | 'naukrigulf' | 'gulftalent';
+export type ApplicationStatus =
+  | 'applied'
+  | 'shortlisted'
+  | 'interviewing'
+  | 'offer'
+  | 'rejected'
+  | 'withdrawn'
+  | 'saved'
+  | 'waiting_response'
+  | 'response_received'
+  | 'hired'
+  | 'no_response'
+  | 'candidate_rejected'
+  | 'on_hold'
+  | 'closed';
+export type FinalOutcome =
+  | 'offer_received'
+  | 'offer_accepted'
+  | 'offer_declined'
+  | 'company_rejected'
+  | 'candidate_rejected'
+  | 'withdrawn'
+  | 'no_response'
+  | 'position_closed';
+export type ResumeStatus = 'not_submitted' | 'submitted' | 'submitted_with_cover_letter' | 'resume_requested' | 'resume_updated_resubmitted';
 export type SalaryStatus = 'provided' | 'will_update_later';
 export type VisaSponsorshipStatus = 'yes' | 'no' | 'unsure' | 'need_to_ask';
 export type VisitPurpose = 'interview' | 'office_tour' | 'meeting' | 'recruiting_fair' | 'other';
-export type InterviewType = 'phone' | 'video' | 'in_person';
+export type InterviewType =
+  | 'phone'
+  | 'video'
+  | 'in_person'
+  | 'hr_screening'
+  | 'recruiter_call'
+  | 'technical'
+  | 'design'
+  | 'portfolio_review'
+  | 'hiring_manager'
+  | 'final'
+  | 'other';
 export type InterviewOutcome = 'pending' | 'very_good' | 'good' | 'ok' | 'bad';
+export type InterviewStatus = 'scheduled' | 'completed' | 'cancelled';
+export type RoundResult = 'pending' | 'passed' | 'failed' | 'waiting_for_result';
+export type FollowUpStatus = 'pending' | 'completed' | 'skipped';
 export type ExpenseCategory = 'meals' | 'transport' | 'clothes' | 'shopping' | 'activities' | 'pg_rent' | 'flight' | 'visa' | 'other';
 export type PaymentMethod = 'cash' | 'card' | 'other';
 export type VisaCostResponsibility = 'company' | 'employee';
@@ -183,8 +221,11 @@ export interface Database {
           trip_id: string;
           company_name: string;
           position_title: string;
+          location: string | null;
           source: ApplicationSource;
+          source_name: string | null;
           status: ApplicationStatus;
+          final_outcome: FinalOutcome | null;
           applied_date: string;
           salary_min_aed: number | null;
           salary_max_aed: number | null;
@@ -193,6 +234,11 @@ export interface Database {
           contact_name: string | null;
           contact_email: string | null;
           contact_phone: string | null;
+          resume_status: ResumeStatus;
+          resume_version: string | null;
+          resume_submitted_date: string | null;
+          cover_letter_submitted: boolean;
+          application_url: string | null;
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -203,8 +249,11 @@ export interface Database {
           trip_id: string;
           company_name: string;
           position_title: string;
+          location?: string | null;
           source: ApplicationSource;
+          source_name?: string | null;
           status?: ApplicationStatus;
+          final_outcome?: FinalOutcome | null;
           applied_date?: string;
           salary_min_aed?: number | null;
           salary_max_aed?: number | null;
@@ -213,6 +262,11 @@ export interface Database {
           contact_name?: string | null;
           contact_email?: string | null;
           contact_phone?: string | null;
+          resume_status?: ResumeStatus;
+          resume_version?: string | null;
+          resume_submitted_date?: string | null;
+          cover_letter_submitted?: boolean;
+          application_url?: string | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -300,6 +354,9 @@ export interface Database {
           interview_date: string;
           interview_time: string;
           type: InterviewType;
+          round_number: number;
+          interview_status: InterviewStatus;
+          round_result: RoundResult;
           interviewer_name: string | null;
           interviewer_role: string | null;
           meeting_link: string | null;
@@ -310,6 +367,7 @@ export interface Database {
           outcome: InterviewOutcome;
           confidence_rating: number | null;
           feedback_notes: string | null;
+          prep_notes: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -320,6 +378,9 @@ export interface Database {
           interview_date: string;
           interview_time: string;
           type: InterviewType;
+          round_number?: number;
+          interview_status?: InterviewStatus;
+          round_result?: RoundResult;
           interviewer_name?: string | null;
           interviewer_role?: string | null;
           meeting_link?: string | null;
@@ -330,6 +391,7 @@ export interface Database {
           outcome?: InterviewOutcome;
           confidence_rating?: number | null;
           feedback_notes?: string | null;
+          prep_notes?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -440,6 +502,68 @@ export interface Database {
             foreignKeyName: 'offers_application_id_fkey';
             columns: ['application_id'];
             isOneToOne: true;
+            referencedRelation: 'applications';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      application_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          application_id: string;
+          event_type: string;
+          description: string;
+          metadata: Record<string, unknown> | null;
+          occurred_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          application_id: string;
+          event_type: string;
+          description: string;
+          metadata?: Record<string, unknown> | null;
+          occurred_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['application_events']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'application_events_application_id_fkey';
+            columns: ['application_id'];
+            isOneToOne: false;
+            referencedRelation: 'applications';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      follow_ups: {
+        Row: {
+          id: string;
+          user_id: string;
+          application_id: string;
+          due_date: string;
+          status: FollowUpStatus;
+          notes: string | null;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          application_id: string;
+          due_date: string;
+          status?: FollowUpStatus;
+          notes?: string | null;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['follow_ups']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'follow_ups_application_id_fkey';
+            columns: ['application_id'];
+            isOneToOne: false;
             referencedRelation: 'applications';
             referencedColumns: ['id'];
           },
