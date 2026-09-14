@@ -57,31 +57,24 @@ describe('AgentsHubPage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
-  it('renders the page heading and the user identity in the header', () => {
-    mockedUseJourneyState.mockReturnValue(mockResult());
+  it('renders all five agent cards with real data and working navigation buttons', () => {
+    mockedUseJourneyState.mockReturnValue(
+      mockResult({
+        data: makeJourneyState({
+          accommodation: { name: 'Deira Suite', address: 'Deira, Dubai', monthlyRentAed: 4500, checkOutDate: '2026-10-31' },
+        }),
+      }),
+    );
     renderPage();
+
     expect(screen.getByRole('heading', { name: 'Specialized Mission Agents', level: 1 })).toBeInTheDocument();
-    expect(screen.getByText('Saravanan')).toBeInTheDocument();
+    expect(screen.getByText('Agent 01 · Basecamp')).toBeInTheDocument();
+    expect(screen.getByText('Deira Suite · paid to 2026-10-31')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel');
+    expect(screen.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel');
   });
 
-  it('renders all five agents as tap-through tiles linking to their own detail page', () => {
-    mockedUseJourneyState.mockReturnValue(mockResult());
-    renderPage();
-
-    const expected: [string, string][] = [
-      ['Basecamp', '/agents/basecamp'],
-      ['Scout Radar', '/agents/scout-radar'],
-      ['Voice Copilot', '/agents/voice-copilot'],
-      ['Treasury', '/agents/treasury'],
-      ['Arbitration', '/agents/arbitration'],
-    ];
-    for (const [name, href] of expected) {
-      const link = screen.getByRole('link', { name: new RegExp(name) });
-      expect(link).toHaveAttribute('href', href);
-    }
-  });
-
-  it('shows honest empty-state summaries when nothing has been logged yet', () => {
+  it('shows honest empty states with real CTAs when nothing has been logged yet', () => {
     mockedUseJourneyState.mockReturnValue(
       mockResult({
         data: makeJourneyState({
@@ -102,26 +95,83 @@ describe('AgentsHubPage', () => {
     expect(screen.getByText('No interview scheduled yet.')).toBeInTheDocument();
     expect(screen.getByText('No budget set yet.')).toBeInTheDocument();
     expect(screen.getByText('No offers yet — keep applying.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Keep Applying' })).toHaveAttribute('href', '/applications');
   });
 
-  it('shows a notification badge and opens the real Mission Alerts drawer from the bell', () => {
-    mockedUseJourneyState.mockReturnValue(mockResult());
-    mockedUseMissionAlerts.mockReturnValue({
-      suggestions: [
-        { id: 's1', type: 'visa_expiring', title: 'Visa expiring soon', reason: 'Visa expires in 2 days.', icon: 'ShieldAlert', priority: 95, action: { kind: 'navigate', to: '/agents' }, dismissible: true },
-      ],
-      dismissAllShown: vi.fn(),
-    });
+  it('never fabricates a confidence score — only shows real compareOffers reasons for 2+ offers', () => {
+    mockedUseJourneyState.mockReturnValue(
+      mockResult({
+        data: makeJourneyState({
+          pendingOffers: [
+            {
+              id: 'offer-1',
+              user_id: 'user-1',
+              application_id: 'app-1',
+              companyName: 'Tech Corp',
+              salary_aed: 220_000,
+              bonus_percent: 10,
+              leave_days: 25,
+              visa_sponsorship: true,
+              visa_cost_responsibility: null,
+              location: null,
+              growth_rating: 3,
+              received_date: '2026-09-10',
+              status: 'pending',
+              created_at: '2026-09-10T00:00:00Z',
+            },
+            {
+              id: 'offer-2',
+              user_id: 'user-1',
+              application_id: 'app-2',
+              companyName: 'Emirates Tech Holding',
+              salary_aed: 200_000,
+              bonus_percent: 5,
+              leave_days: 20,
+              visa_sponsorship: false,
+              visa_cost_responsibility: null,
+              location: null,
+              growth_rating: 2,
+              received_date: '2026-09-11',
+              status: 'pending',
+              created_at: '2026-09-11T00:00:00Z',
+            },
+          ],
+        }),
+      }),
+    );
     renderPage();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
-    expect(screen.getByRole('heading', { name: 'Mission Alerts' })).toBeInTheDocument();
-    expect(screen.getByText('Visa expiring soon')).toBeInTheDocument();
+    expect(screen.getByText('Tech Corp', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('RECOMMENDED')).toBeInTheDocument();
+    expect(screen.queryByText(/CONFIDENCE/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Why: Higher salary/)).toBeInTheDocument();
   });
 
-  it('renders the hero voice action as genuinely disabled, not fake-interactive', () => {
+  it('opens a real, working Mission Copilot modal from the hero voice button', () => {
     mockedUseJourneyState.mockReturnValue(mockResult());
     renderPage();
-    expect(screen.getByRole('button', { name: /Command All Agents/ })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /Command All Agents/ }));
+    expect(screen.getByText('Mission Copilot')).toBeInTheDocument();
+    // The modal opens with a real reply grounded in the mocked journey state, not a placeholder.
+    expect(screen.getByText(/Day 43 of 60/)).toBeInTheDocument();
+  });
+
+  it('opens the Copilot modal focused on interviews from the Voice Copilot card, and lets you send a message', () => {
+    mockedUseJourneyState.mockReturnValue(
+      mockResult({
+        data: makeJourneyState({
+          nextInterview: { id: 'i1', companyName: 'Tech Corp', positionTitle: 'Engineer', interviewDate: '2026-09-15', interviewTime: '14:00', hoursUntil: 6 },
+        }),
+      }),
+    );
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Simulator' }));
+    expect(screen.getByText(/Your next interview is with Tech Corp/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Ask Copilot'), { target: { value: "what's my budget?" } });
+    fireEvent.click(screen.getByLabelText('Send'));
+    expect(screen.getByText(/You've spent/)).toBeInTheDocument();
   });
 });

@@ -12,7 +12,6 @@ import ResetPasswordPage from '@/pages/ResetPasswordPage';
 // same pattern applied consistently rather than special-cased per page.
 const AiHomePage = lazy(() => import('@/pages/AiHomePage'));
 const AgentsHubPage = lazy(() => import('@/pages/AgentsHubPage'));
-const AgentDetailPage = lazy(() => import('@/pages/AgentDetailPage'));
 const TravelPage = lazy(() => import('@/pages/TravelPage'));
 const ApplicationsPage = lazy(() => import('@/pages/ApplicationsPage'));
 const MapPage = lazy(() => import('@/pages/MapPage'));
@@ -49,7 +48,6 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: withSuspense(<AiHomePage />) },
           { path: '/agents', element: withSuspense(<AgentsHubPage />) },
-          { path: '/agents/:agentId', element: withSuspense(<AgentDetailPage />) },
           { path: '/travel', element: withSuspense(<TravelPage />) },
           { path: '/applications', element: withSuspense(<ApplicationsPage />) },
           { path: '/map', element: withSuspense(<MapPage />) },

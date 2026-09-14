@@ -19,7 +19,7 @@ export function AgentActionLink({ to, variant, children, fullWidth }: AgentActio
   return (
     <Link
       to={to}
-      className={`rounded-xl py-2.5 text-center text-sm font-bold transition-all ${VARIANTS[variant]} ${FOCUS_RING} ${fullWidth ? 'block w-full' : ''}`}
+      className={`rounded-xl py-2 text-center text-xs font-bold transition-all ${VARIANTS[variant]} ${FOCUS_RING} ${fullWidth ? 'col-span-2' : ''}`}
     >
       {children}
     </Link>

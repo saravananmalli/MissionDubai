@@ -4,11 +4,12 @@ import { useAuth } from '@/app/auth-context';
 import { AppHeader } from '@/components/AppHeader';
 import { NotificationsDrawer } from '@/components/NotificationsDrawer';
 import { ErrorState } from '@/components/ErrorState';
-import { AgentTile, DisabledVoiceButton } from '@/components/agents';
+import { AgentActionLink, AgentCardShell, AgentVoiceButton, CopilotModal } from '@/components/agents';
 import { useJourneyState } from '@/domains/journey/api';
 import { useMissionAlerts } from '@/domains/suggestions/useMissionAlerts';
 import { firstRunPromptRule } from '@/domains/suggestions/rules';
 import { AGENTS } from '@/domains/agents/config';
+import type { CopilotIntent } from '@/domains/agents/copilotResponses';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { deriveDisplayName } from '@/lib/deriveDisplayName';
 
@@ -18,6 +19,7 @@ export default function AgentsHubPage() {
   const journeyQuery = useJourneyState();
   const { suggestions, dismissAllShown: dismissAllAlerts } = useMissionAlerts(journeyQuery.data);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [copilotIntent, setCopilotIntent] = useState<CopilotIntent | null>(null);
 
   function dismissAllShown() {
     dismissAllAlerts();
@@ -78,7 +80,7 @@ export default function AgentsHubPage() {
             <span>Neural Command Matrix · 5 of 5</span>
           </div>
           <h1 className="text-xl font-extrabold tracking-tight text-white">Specialized Mission Agents</h1>
-          <p className="mt-0.5 text-xs leading-relaxed text-zinc-300">Every card below reflects your real, saved data — tap one to open it.</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-zinc-300">Every card below reflects your real, saved data.</p>
         </div>
 
         {firstRun && (
@@ -96,7 +98,7 @@ export default function AgentsHubPage() {
               </div>
               <div>
                 <div className="text-xs font-bold text-white">Autonomous Engine v2.4</div>
-                <div className="text-[10px] text-zinc-300">Listening for natural voice cues…</div>
+                <div className="text-[10px] text-zinc-300">Ask about any part of your mission</div>
               </div>
             </div>
             <div className="flex h-5 items-center gap-1" aria-hidden="true">
@@ -106,23 +108,35 @@ export default function AgentsHubPage() {
               <span className="h-4 w-1 animate-pulse rounded-full bg-pink-400 delay-100" />
             </div>
           </div>
-          <DisabledVoiceButton label="🎙 Command All Agents" className="w-full" />
+          <AgentVoiceButton label="🎙 Command All Agents" onClick={() => setCopilotIntent('status')} className="w-full" fullWidth />
         </section>
 
         {AGENTS.map((agent) => (
-          <AgentTile
+          <AgentCardShell
             key={agent.id}
-            to={`/agents/${agent.id}`}
             agentNumber={agent.number}
             name={agent.name}
             subtitle={agent.subtitle}
             icon={agent.icon}
             accent={agent.accent}
             status={agent.getStatus(state)}
-            summary={agent.getSummary(state)}
-          />
+            highlightBorder={agent.highlightBorder}
+            footer={agent.getActions(state).map((action, index) =>
+              action.kind === 'voice' ? (
+                <AgentVoiceButton key={index} label={action.label} onClick={() => setCopilotIntent('interview')} />
+              ) : (
+                <AgentActionLink key={index} to={action.to!} variant={action.variant ?? 'primary'} fullWidth={agent.getActions(state).length === 1}>
+                  {action.label}
+                </AgentActionLink>
+              ),
+            )}
+          >
+            {agent.renderPanel(state)}
+          </AgentCardShell>
         ))}
       </main>
+
+      {copilotIntent && <CopilotModal state={state} initialIntent={copilotIntent} onClose={() => setCopilotIntent(null)} />}
 
       {showNotifications && (
         <NotificationsDrawer suggestions={suggestions} onDismissAll={dismissAllShown} onClose={() => setShowNotifications(false)} />
