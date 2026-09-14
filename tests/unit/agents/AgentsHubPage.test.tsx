@@ -70,8 +70,30 @@ describe('AgentsHubPage', () => {
     expect(screen.getByRole('heading', { name: 'Specialized Mission Agents', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('Agent 01 · Basecamp')).toBeInTheDocument();
     expect(screen.getByText('Deira Suite · paid to 2026-10-31')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel');
-    expect(screen.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel');
+    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
+    expect(screen.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel#visa');
+    expect(screen.getByRole('link', { name: 'Log Application' })).toHaveAttribute('href', '/applications?action=add');
+  });
+
+  it("gives each card's two buttons genuinely different destinations, not the same page twice", () => {
+    mockedUseJourneyState.mockReturnValue(
+      mockResult({
+        data: makeJourneyState({
+          pendingOffers: [
+            { id: 'o1', user_id: 'u1', application_id: 'a1', companyName: 'A', salary_aed: 1, bonus_percent: null, leave_days: null, visa_sponsorship: false, visa_cost_responsibility: null, location: null, growth_rating: null, received_date: '2026-09-10', status: 'pending', created_at: '2026-09-10T00:00:00Z' },
+            { id: 'o2', user_id: 'u1', application_id: 'a2', companyName: 'B', salary_aed: 2, bonus_percent: null, leave_days: null, visa_sponsorship: false, visa_cost_responsibility: null, location: null, growth_rating: null, received_date: '2026-09-10', status: 'pending', created_at: '2026-09-10T00:00:00Z' },
+          ],
+        }),
+      }),
+    );
+    renderPage();
+
+    expect(screen.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
+    expect(screen.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel#visa');
+    expect(screen.getByRole('link', { name: /View Pipeline/ })).toHaveAttribute('href', '/applications');
+    expect(screen.getByRole('link', { name: 'Log Application' })).toHaveAttribute('href', '/applications?action=add');
+    expect(screen.getByRole('link', { name: /Compare Offers/ })).toHaveAttribute('href', '/analytics');
+    expect(screen.getByRole('link', { name: /Review & Decide/ })).toHaveAttribute('href', '/analytics#recommendation');
   });
 
   it('shows honest empty states with real CTAs when nothing has been logged yet', () => {

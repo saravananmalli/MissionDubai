@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ChatFlow } from '@/chat-flow';
 import { ErrorState } from '@/components/ErrorState';
 import { PageHeader } from '@/components/PageHeader';
@@ -13,7 +13,9 @@ import { useCurrentTrip } from '@/hooks/useCurrentTrip';
 export default function ApplicationsPage() {
   const tripQuery = useCurrentTrip();
   const applicationsQuery = useApplications(tripQuery.data?.id);
-  const [isAddingApplication, setIsAddingApplication] = useState(false);
+  const [searchParams] = useSearchParams();
+  // Lets a link (e.g. the Agents matrix's "Log Application" button) jump straight into the add flow instead of just landing on the list.
+  const [isAddingApplication, setIsAddingApplication] = useState(() => searchParams.get('action') === 'add');
 
   if (tripQuery.isLoading) {
     return (

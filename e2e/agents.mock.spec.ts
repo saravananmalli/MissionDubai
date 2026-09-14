@@ -57,7 +57,7 @@ test.describe('Specialized Mission Agents (mock backend)', () => {
 
     // A real navigation button — no dead ends.
     await page.getByRole('link', { name: 'Manage Lease' }).click();
-    await expect(page).toHaveURL(/\/travel$/);
+    await expect(page).toHaveURL(/\/travel#lease$/);
 
     await page.goto('/agents');
 
@@ -111,6 +111,28 @@ test.describe('Specialized Mission Agents (mock backend)', () => {
     await expect(page.getByText(/94%/)).toHaveCount(0);
 
     await expect(page.getByRole('link', { name: /Compare Offers/ })).toHaveAttribute('href', '/analytics');
-    await expect(page.getByRole('link', { name: /Review & Decide/ })).toHaveAttribute('href', '/analytics');
+    await expect(page.getByRole('link', { name: /Review & Decide/ })).toHaveAttribute('href', '/analytics#recommendation');
+
+    // "Review & Decide" jumps to the Recommendation card, not just the top of the page.
+    await page.getByRole('link', { name: /Review & Decide/ }).click();
+    await expect(page.getByRole('heading', { name: 'Recommendation' })).toBeInViewport();
+  });
+
+  test("each card's two buttons lead somewhere genuinely different, with no dead ends", async ({ page }) => {
+    await installMockSupabase(page);
+    await signUp(page);
+
+    await page.goto('/agents');
+
+    // Scout Radar: "Log Application" jumps straight into the add flow instead of just the list.
+    await page.getByRole('link', { name: 'Log Application' }).click();
+    await expect(page).toHaveURL(/\/applications\?action=add$/);
+    await expect(page.getByText("Let's add a job application! Where did you find this?")).toBeVisible();
+
+    await page.goto('/agents');
+
+    // Basecamp: "Visa & Residency" and "Manage Lease" both land on Travel, but distinctly.
+    await expect(page.getByRole('link', { name: 'Manage Lease' })).toHaveAttribute('href', '/travel#lease');
+    await expect(page.getByRole('link', { name: 'Visa & Residency →' })).toHaveAttribute('href', '/travel#visa');
   });
 });

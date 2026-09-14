@@ -6,10 +6,12 @@ import { PageHeader } from '@/components/PageHeader';
 import { travelFlow } from '@/domains/travel/flowConfig';
 import { useTravelSummary } from '@/domains/travel/api';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
+import { useScrollToHash } from '@/hooks/useScrollToHash';
 
 export default function TravelPage() {
   const tripQuery = useCurrentTrip();
   const summaryQuery = useTravelSummary(tripQuery.data?.id);
+  useScrollToHash(Boolean(summaryQuery.data));
 
   if (tripQuery.isLoading) {
     return (
@@ -86,21 +88,25 @@ export default function TravelPage() {
       ))}
 
       {summary!.visa && (
-        <Card title="Visa">
-          <p className="text-base font-medium capitalize text-ink-800">{summary!.visa.visa_type} visa</p>
-          <p className="text-sm text-ink-500">
-            {summary!.visa.fee_aed} AED · {summary!.visa.status}
-          </p>
-          <p className="text-sm text-ink-500">Expires {summary!.visa.expiry_date}</p>
-        </Card>
+        <div id="visa">
+          <Card title="Visa">
+            <p className="text-base font-medium capitalize text-ink-800">{summary!.visa.visa_type} visa</p>
+            <p className="text-sm text-ink-500">
+              {summary!.visa.fee_aed} AED · {summary!.visa.status}
+            </p>
+            <p className="text-sm text-ink-500">Expires {summary!.visa.expiry_date}</p>
+          </Card>
+        </div>
       )}
 
       {summary!.accommodation && (
-        <Card title="PG Accommodation">
-          <p className="text-base font-medium text-ink-800">{summary!.accommodation.name}</p>
-          <p className="text-sm text-ink-500">{summary!.accommodation.address}</p>
-          <p className="text-sm text-ink-500">{summary!.accommodation.monthly_rent_aed} AED / month</p>
-        </Card>
+        <div id="lease">
+          <Card title="PG Accommodation">
+            <p className="text-base font-medium text-ink-800">{summary!.accommodation.name}</p>
+            <p className="text-sm text-ink-500">{summary!.accommodation.address}</p>
+            <p className="text-sm text-ink-500">{summary!.accommodation.monthly_rent_aed} AED / month</p>
+          </Card>
+        </div>
       )}
 
       <Card title="Total Trip Cost So Far">

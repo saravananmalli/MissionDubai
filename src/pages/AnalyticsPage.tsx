@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/Button';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
+import { useScrollToHash } from '@/hooks/useScrollToHash';
 import { useApplications } from '@/domains/applications/api';
 import { useInterviews } from '@/domains/interviews/api';
 import { useExpenses } from '@/domains/expenses/api';
@@ -35,6 +36,7 @@ export default function AnalyticsPage() {
   const travelSummaryQuery = useTravelSummary(tripQuery.data?.id);
   const offersQuery = useOffers(tripQuery.data?.id);
   const [isAddingOffer, setIsAddingOffer] = useState(false);
+  useScrollToHash(Boolean(tripQuery.data));
 
   if (tripQuery.isLoading) {
     return (
@@ -220,14 +222,16 @@ export default function AnalyticsPage() {
       )}
 
       {comparison && (
-        <Card title="Recommendation">
-          <p className="text-base font-medium text-text-primary">
-            🏆 {offers.find((o) => o.id === comparison.recommendedOfferId)?.companyName} looks best overall
-          </p>
-          {comparison.reasons.length > 0 && (
-            <p className="text-sm text-text-secondary">({comparison.reasons.join(', ')})</p>
-          )}
-        </Card>
+        <div id="recommendation">
+          <Card title="Recommendation">
+            <p className="text-base font-medium text-text-primary">
+              🏆 {offers.find((o) => o.id === comparison.recommendedOfferId)?.companyName} looks best overall
+            </p>
+            {comparison.reasons.length > 0 && (
+              <p className="text-sm text-text-secondary">({comparison.reasons.join(', ')})</p>
+            )}
+          </Card>
+        </div>
       )}
 
       {applications.length === 0 ? (

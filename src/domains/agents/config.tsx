@@ -78,8 +78,8 @@ const basecamp: AgentDefinition = {
   },
   getActions() {
     return [
-      { kind: 'link', label: 'Manage Lease', to: '/travel', variant: 'primary' },
-      { kind: 'link', label: 'Visa & Residency →', to: '/travel', variant: 'secondary' },
+      { kind: 'link', label: 'Manage Lease', to: '/travel#lease', variant: 'primary' },
+      { kind: 'link', label: 'Visa & Residency →', to: '/travel#visa', variant: 'secondary' },
     ];
   },
 };
@@ -125,7 +125,7 @@ const scoutRadar: AgentDefinition = {
   getActions(state) {
     return [
       { kind: 'link', label: `View Pipeline (${state.applications.total}) →`, to: '/applications', variant: 'primary' },
-      { kind: 'link', label: 'Log Application', to: '/applications', variant: 'secondary' },
+      { kind: 'link', label: 'Log Application', to: '/applications?action=add', variant: 'secondary' },
     ];
   },
 };
@@ -299,7 +299,7 @@ const arbitration: AgentDefinition = {
     }
     return [
       { kind: 'link', label: 'Compare Offers →', to: '/analytics', variant: 'primary' },
-      { kind: 'link', label: 'Review & Decide →', to: '/analytics', variant: 'secondary' },
+      { kind: 'link', label: 'Review & Decide →', to: '/analytics#recommendation', variant: 'secondary' },
     ];
   },
 };
