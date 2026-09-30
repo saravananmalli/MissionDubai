@@ -575,6 +575,12 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['suggestion_dismissals']['Insert']>;
         Relationships: [];
       };
+      push_subscriptions: {
+        Row: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string };
+        Insert: { id?: string; user_id?: string; endpoint: string; p256dh: string; auth: string; created_at?: string };
+        Update: Partial<Database['public']['Tables']['push_subscriptions']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

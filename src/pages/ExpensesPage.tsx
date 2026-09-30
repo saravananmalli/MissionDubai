@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { clsx } from 'clsx';
 import {
   Car,
@@ -158,7 +158,9 @@ export default function ExpensesPage() {
   const saveBudgetMutation = useSaveBudget();
   const [budgetInput, setBudgetInput] = useState('');
   const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [isAddingExpense, setIsAddingExpense] = useState(false);
+  // Reminder notifications deep-link here with ?add=1 so one tap lands in the log flow.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isAddingExpense, setIsAddingExpense] = useState(searchParams.get('add') === '1');
 
   if (tripQuery.isLoading) {
     return (
@@ -235,8 +237,13 @@ export default function ExpensesPage() {
     }
   }
 
-  function handleExpenseFinished() {
+  function closeExpenseFlow() {
     setIsAddingExpense(false);
+    if (searchParams.has('add')) setSearchParams({}, { replace: true });
+  }
+
+  function handleExpenseFinished() {
+    closeExpenseFlow();
     void tripQuery.refetch();
     void expensesQuery.refetch();
     void budgetQuery.refetch();
@@ -261,7 +268,7 @@ export default function ExpensesPage() {
         {isAddingExpense ? (
           <Card title="Log an expense">
             <ChatFlow flow={expenseFlow} onFinished={handleExpenseFinished} />
-            <TertiaryButton type="button" onClick={() => setIsAddingExpense(false)} className="self-start">
+            <TertiaryButton type="button" onClick={closeExpenseFlow} className="self-start">
               Cancel
             </TertiaryButton>
           </Card>

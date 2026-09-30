@@ -33,3 +33,14 @@ test.describe('expenses + budget (mock backend)', () => {
     await expect(page.getByRole('heading', { name: 'Burn Rate' })).toBeVisible();
   });
 });
+
+test.describe('reminder deep link (mock backend)', () => {
+  test('opening /expenses?add=1 lands straight in the log flow', async ({ page }) => {
+    await installMockSupabase(page);
+    await page.goto('/expenses?add=1');
+    await expect(page.getByRole('group', { name: 'What did you spend on?' })).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(page).toHaveURL(/\/expenses$/);
+    await expect(page.getByRole('button', { name: /log expense/i })).toBeVisible();
+  });
+});

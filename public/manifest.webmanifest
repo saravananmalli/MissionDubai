@@ -1,0 +1,15 @@
+{
+  "name": "Mission Dubai",
+  "short_name": "MissionDubai",
+  "description": "Your Dubai job-hunt and budget companion.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#130E24",
+  "theme_color": "#130E24",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,4 +1,5 @@
 import { Bell, X } from 'lucide-react';
+import { RemindersCard } from '@/components/RemindersCard';
 import type { Suggestion } from '@/domains/suggestions/types';
 
 interface NotificationsDrawerProps {
@@ -38,6 +39,8 @@ export function NotificationsDrawer({ suggestions, onDismissAll, onClose }: Noti
             </div>
           ))}
         </div>
+
+        <RemindersCard />
 
         <button
           type="button"
