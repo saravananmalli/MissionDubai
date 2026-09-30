@@ -22,6 +22,7 @@ import { PrimaryPageHeader } from '@/components/PrimaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/Button';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
+import { useTravelSummary } from '@/domains/travel/api';
 import { useBudget, useExpenses, useSaveBudget, type Expense } from '@/domains/expenses/api';
 import { expenseFlow } from '@/domains/expenses/flowConfig';
 import { computeBurnRate, getBudgetAlertLevel } from '@/domains/expenses/utils';
@@ -112,6 +113,7 @@ export default function ExpensesPage() {
   const tripQuery = useCurrentTrip();
   const budgetQuery = useBudget(tripQuery.data?.id);
   const expensesQuery = useExpenses(tripQuery.data?.id);
+  const travelQuery = useTravelSummary(tripQuery.data?.id);
   const saveBudgetMutation = useSaveBudget();
   const [budgetInput, setBudgetInput] = useState('');
   const [isEditingBudget, setIsEditingBudget] = useState(false);
@@ -140,7 +142,15 @@ export default function ExpensesPage() {
   }
 
   const expenses = expensesQuery.data ?? [];
-  const totalSpent = expenses.reduce((sum, e) => sum + e.amount_aed, 0);
+  // Booked travel costs count toward the budget too: flights, visa fee, and the first month's rent.
+  const travel = travelQuery.data;
+  const bookedTravel = [
+    { label: 'Flights', amount: (travel?.flights ?? []).reduce((sum, f) => sum + Number(f.cost_aed), 0) },
+    { label: 'Visa', amount: Number(travel?.visa?.fee_aed ?? 0) },
+    { label: 'Accommodation (first month)', amount: Number(travel?.accommodation?.monthly_rent_aed ?? 0) },
+  ].filter((item) => item.amount > 0);
+  const bookedTotal = bookedTravel.reduce((sum, item) => sum + item.amount, 0);
+  const totalSpent = expenses.reduce((sum, e) => sum + e.amount_aed, 0) + bookedTotal;
   const budgetAmount = budgetQuery.data?.amount_aed ?? 0;
   const percentUsed = budgetAmount > 0 ? Math.round((totalSpent / budgetAmount) * 100) : 0;
   const alertLevel = budgetQuery.data ? getBudgetAlertLevel(percentUsed) : 'ok';
@@ -216,6 +226,12 @@ export default function ExpensesPage() {
                 <p className="text-lg font-semibold text-primary-light">AED {(budgetAmount - totalSpent).toLocaleString()}</p>
               </div>
             </div>
+
+            {bookedTravel.length > 0 && (
+              <p className="w-full text-xs text-text-muted">
+                Includes booked travel: {bookedTravel.map((item) => `${item.label} AED ${item.amount.toLocaleString()}`).join(' · ')}
+              </p>
+            )}
 
             {burnRate && (
               <div className="flex w-full items-center justify-between gap-2 text-sm">
