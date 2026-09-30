@@ -17,6 +17,8 @@ A personal Dubai job-hunt tracker: one trip, tracked through five guided chat fl
    - `VITE_SUPABASE_URL` — Settings → API → Project URL
    - `VITE_SUPABASE_ANON_KEY` — Settings → API → **publishable/anon** key only. Never put the `service_role`/secret key in a client-side env file.
 
+   - `VITE_PERSONAL_EMAIL` / `VITE_PERSONAL_PASSWORD` — your one existing Supabase account. There is **no login screen**: the app silently signs in with these. They are bundled into the client build, so run it only locally or behind access protection — never on a public URL.
+
    The Map page uses Leaflet + OpenStreetMap — no API key or billing account needed.
 3. Apply the migrations in `supabase/migrations/` **in order** via the Supabase SQL Editor (there's no local Supabase CLI instance yet — see Known Limitations).
 4. In the Supabase dashboard, under Authentication → Sign In / Providers → Email:
@@ -35,7 +37,6 @@ A personal Dubai job-hunt tracker: one trip, tracked through five guided chat fl
 | `npm run test` | Unit tests (Vitest) |
 | `npm run test:integration` | RLS cross-user isolation test against real Supabase (see `tests/integration/README.md`) |
 | `npm run test:e2e` | E2E suite — mock-backend specs (`*.mock.spec.ts`, safe to run anytime) plus real-backend specs (plain `*.spec.ts`, need Supabase reachable) |
-| `npm run test:e2e:signup` | The one E2E spec that exercises real signup — run sparingly, see below |
 | `npm run verify` | lint + typecheck + unit tests — the standard pre-commit gate |
 
 ## Testing strategy
@@ -44,8 +45,6 @@ Every domain has **two** E2E specs covering the same user journey:
 
 - `*.mock.spec.ts` — runs against a local, in-memory fake of the Supabase Auth/REST/Storage endpoints (`e2e/mock-backend/mockSupabase.ts`), installed via Playwright's `page.route()`. Zero network calls, zero dependency on Supabase being reachable or rate-limited. Use these for fast, routine verification.
 - `*.spec.ts` — the same journey against your real Supabase project, using one fixed, reused test account (`e2e/support/testUser.ts`) rather than signing up fresh each run, specifically to avoid Supabase's signup email-rate-limit. Each test resets that account's data first (`e2e/support/resetTestData.ts`).
-
-`auth.spec.ts` is the sole exception: it specifically tests the signup flow itself, so it must create a real account each run. It's tagged `@signup` and excluded from the default `npm run test:e2e` — run it deliberately via `npm run test:e2e:signup`, and sparingly.
 
 ## Deploying to Vercel
 

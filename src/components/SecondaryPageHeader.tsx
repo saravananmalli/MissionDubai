@@ -8,7 +8,7 @@ import { useMissionAlerts } from '@/domains/suggestions/useMissionAlerts';
 /**
  * The shared header for every page reached by navigating "into" something
  * (not a bottom-nav root) — a real back arrow, the page title, and the same
- * notifications/logout icons every other page has. Bundles the Mission
+ * notifications icon every other page has. Bundles the Mission
  * Alerts bell + drawer so callers don't need to re-wire it per page.
  */
 export function SecondaryPageHeader({ title, subtitle }: { title: string; subtitle?: ReactNode }) {

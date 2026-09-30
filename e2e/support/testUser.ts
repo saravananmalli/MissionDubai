@@ -14,26 +14,10 @@ export const FIXED_TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e-fixed-user@ex
 export const FIXED_TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'correct horse battery staple';
 
 /**
- * Logs into the fixed test account. The very first time this account doesn't
- * exist yet, falls back to signing it up once — every run after that is a
- * plain login, consuming no signup-rate-limit quota.
+ * The app has no login screen: it silently signs in to the personal account
+ * from VITE_PERSONAL_EMAIL/PASSWORD. This just opens the app and waits for it.
  */
 export async function signInFixedTestUser(page: Page): Promise<void> {
-  await page.goto('/login');
-  await page.getByLabel('Email').fill(FIXED_TEST_EMAIL);
-  await page.getByLabel('Password').fill(FIXED_TEST_PASSWORD);
-  await page.getByRole('button', { name: /log in/i }).click();
-
-  const homeHeading = page.getByRole('heading', { name: /your dubai mission/i, level: 1 });
-  const loginFailed = page.getByRole('alert');
-  await Promise.race([homeHeading.waitFor({ timeout: 10_000 }), loginFailed.waitFor({ timeout: 10_000 })]);
-
-  if (await homeHeading.isVisible()) return;
-
-  // First run ever: the fixed account doesn't exist yet, so create it once.
-  await page.goto('/signup');
-  await page.getByLabel('Email').fill(FIXED_TEST_EMAIL);
-  await page.getByLabel('Password').fill(FIXED_TEST_PASSWORD);
-  await page.getByRole('button', { name: /sign up/i }).click();
-  await expect(homeHeading).toBeVisible({ timeout: 10_000 });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: /your dubai mission/i, level: 1 })).toBeVisible({ timeout: 15_000 });
 }

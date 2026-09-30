@@ -12,8 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:e2e": "playwright test --grep-invert @signup",
-    "test:e2e:signup": "playwright test --grep @signup",
+    "test:e2e": "playwright test",
     "verify": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {

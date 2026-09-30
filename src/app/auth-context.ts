@@ -5,13 +5,9 @@ export interface AuthContextValue {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
-  signUpWithPassword: (
-    email: string,
-    password: string,
-  ) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
-  signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
-  requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  /** Set when the silent personal sign-in failed; cleared on a successful retry. */
+  error: string | null;
+  retry: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

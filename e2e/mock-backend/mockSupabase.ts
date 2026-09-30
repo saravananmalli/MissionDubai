@@ -216,7 +216,10 @@ export async function installMockSupabase(page: Page): Promise<void> {
 
     if (url.pathname.endsWith('/auth/v1/token') && method === 'POST') {
       const body = request.postDataJSON() as { email: string; password: string };
-      if (!user || user.email !== body.email || user.password !== body.password) {
+      // The app signs in silently with its personal-account env vars; the mock
+      // accepts whoever asks first and then holds to those credentials.
+      user ??= { id: randomUUID(), email: body.email, password: body.password };
+      if (user.email !== body.email || user.password !== body.password) {
         return json(400, { error_code: 'invalid_credentials', msg: 'Invalid login credentials' });
       }
       return json(200, makeAuthSession(user.id, user.email));

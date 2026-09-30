@@ -13,11 +13,7 @@ test.describe('applications + company visits (mock backend)', () => {
   test('minimal LinkedIn application shows incomplete-field badges; company-site application does not', async ({ page }) => {
     await installMockSupabase(page);
 
-    const email = `mock-${Date.now()}@example.com`;
-    await page.goto('/signup');
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill('correct horse battery staple');
-    await page.getByRole('button', { name: /sign up/i }).click();
+    await page.goto('/');
     await expect(page.getByRole('heading', { name: /your dubai mission/i, level: 1 })).toBeVisible({ timeout: 10_000 });
 
     await page.goto('/applications');

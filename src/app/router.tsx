@@ -2,9 +2,6 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '@/app/AppShell';
 import { ProtectedRoute } from '@/app/ProtectedRoute';
-import LoginPage from '@/pages/LoginPage';
-import SignupPage from '@/pages/SignupPage';
-import ResetPasswordPage from '@/pages/ResetPasswordPage';
 
 // Route-level code splitting: Recharts (Financial Report) and react-day-picker
 // (Interview Calendar) are large enough on their own to be worth keeping out
@@ -38,9 +35,6 @@ function withSuspense(element: ReactNode) {
 }
 
 export const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
-  { path: '/signup', element: <SignupPage /> },
-  { path: '/reset-password', element: <ResetPasswordPage /> },
   {
     element: <ProtectedRoute />,
     children: [

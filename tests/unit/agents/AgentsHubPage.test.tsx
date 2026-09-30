@@ -35,10 +35,8 @@ describe('AgentsHubPage', () => {
       user: { email: 'saravanan@example.com' } as never,
       session: null,
       isLoading: false,
-      signUpWithPassword: vi.fn(),
-      signInWithPassword: vi.fn(),
-      signOut: vi.fn(),
-      requestPasswordReset: vi.fn(),
+      error: null,
+      retry: vi.fn(),
     });
   });
 
