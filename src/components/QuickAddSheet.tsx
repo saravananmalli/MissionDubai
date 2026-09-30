@@ -23,7 +23,7 @@ export function QuickAddSheet({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-20 flex items-end justify-center bg-background/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Quick add">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Quick add">
       <div className="w-full max-w-md rounded-t-lg border border-border bg-surface-elevated p-4 pb-8 shadow-card">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Quick Add</h2>

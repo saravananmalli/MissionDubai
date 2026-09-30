@@ -204,7 +204,7 @@ export default function AiHomePage() {
         {/* 2. AI Key Priority Card */}
         {priority && (
           <section
-            className="relative rounded-3xl bg-gradient-to-b from-[#1C1233] to-[#120B22] border border-[#EC4899]/35 p-4.5 shadow-[0_8px_28px_rgba(236,72,153,0.15)] space-y-3"
+            className="relative rounded-3xl bg-gradient-to-b from-[#1C1233] to-[#120B22] border border-[#EC4899]/35 p-5 shadow-[0_8px_28px_rgba(236,72,153,0.15)] space-y-3"
             aria-label="AI Key Priority"
           >
             <div className="flex items-center justify-between">

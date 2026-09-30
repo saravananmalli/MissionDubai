@@ -5,6 +5,7 @@ import {
   Car,
   CircleDollarSign,
   Download,
+  Plus,
   Home,
   Plane,
   ShieldCheck,
@@ -12,7 +13,6 @@ import {
   Shirt,
   Ticket,
   Utensils,
-  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import { ChatFlow } from '@/chat-flow';
@@ -20,7 +20,7 @@ import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
 import { PrimaryPageHeader } from '@/components/PrimaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
-import { PrimaryButton, SecondaryButton } from '@/components/Button';
+import { PrimaryButton, SecondaryButton, TertiaryButton } from '@/components/Button';
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
 import { useTravelSummary } from '@/domains/travel/api';
 import { useBudget, useExpenses, useSaveBudget, type Expense } from '@/domains/expenses/api';
@@ -52,8 +52,6 @@ const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   visa: 'Visa',
   other: 'Other',
 };
-
-const QUICK_LOG_CATEGORIES: ExpenseCategory[] = ['meals', 'transport', 'shopping', 'activities'];
 
 const ALERT_COPY: Record<string, { text: string; className: string }> = {
   warning: { text: "You've used 80% of your budget.", className: 'text-warning' },
@@ -109,6 +107,49 @@ function downloadExpensesCsv(expenses: Expense[]) {
   URL.revokeObjectURL(url);
 }
 
+function localIsoDate(date: Date): string {
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 10);
+}
+
+function dayLabel(isoDate: string, now: Date): string {
+  const today = localIsoDate(now);
+  const yesterday = localIsoDate(new Date(now.getTime() - 86_400_000));
+  if (isoDate === today) return 'Today';
+  if (isoDate === yesterday) return 'Yesterday';
+  return new Date(`${isoDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function groupByDay(expenses: Expense[], now: Date): { label: string; items: Expense[] }[] {
+  const groups = new Map<string, Expense[]>();
+  for (const expense of expenses) {
+    const list = groups.get(expense.expense_date) ?? [];
+    list.push(expense);
+    groups.set(expense.expense_date, list);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => (a < b ? 1 : -1))
+    .map(([date, items]) => ({ label: dayLabel(date, now), items }));
+}
+
+function StatTile({ label, value, tone = 'default' }: { label: string; value: string; tone?: 'default' | 'accent' | 'danger' }) {
+  return (
+    <div
+      className={clsx(
+        'rounded-md border p-3 text-center',
+        tone === 'accent' && 'border-primary-light/30 bg-primary/10',
+        tone === 'danger' && 'border-error/40 bg-error/10',
+        tone === 'default' && 'border-border bg-surface-2/70',
+      )}
+    >
+      <p className="text-[10px] uppercase tracking-wide text-text-muted">{label}</p>
+      <p className={clsx('text-lg font-semibold', tone === 'accent' ? 'text-primary-light' : tone === 'danger' ? 'text-error' : 'text-text-primary')}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export default function ExpensesPage() {
   const tripQuery = useCurrentTrip();
   const budgetQuery = useBudget(tripQuery.data?.id);
@@ -141,20 +182,25 @@ export default function ExpensesPage() {
     );
   }
 
+  const now = new Date();
   const expenses = expensesQuery.data ?? [];
+
   // Booked travel costs count toward the budget too: flights, visa fee, and the first month's rent.
   const travel = travelQuery.data;
-  const bookedTravel = [
-    { label: 'Flights', amount: (travel?.flights ?? []).reduce((sum, f) => sum + Number(f.cost_aed), 0) },
-    { label: 'Visa', amount: Number(travel?.visa?.fee_aed ?? 0) },
-    { label: 'Accommodation (first month)', amount: Number(travel?.accommodation?.monthly_rent_aed ?? 0) },
+  const bookedTravel: { category: ExpenseCategory; label: string; amount: number }[] = [
+    { category: 'flight' as const, label: 'Flights', amount: (travel?.flights ?? []).reduce((sum, f) => sum + Number(f.cost_aed), 0) },
+    { category: 'visa' as const, label: 'Visa', amount: Number(travel?.visa?.fee_aed ?? 0) },
+    { category: 'pg_rent' as const, label: 'Accommodation (first month)', amount: Number(travel?.accommodation?.monthly_rent_aed ?? 0) },
   ].filter((item) => item.amount > 0);
   const bookedTotal = bookedTravel.reduce((sum, item) => sum + item.amount, 0);
-  const totalSpent = expenses.reduce((sum, e) => sum + e.amount_aed, 0) + bookedTotal;
+  const loggedTotal = expenses.reduce((sum, e) => sum + e.amount_aed, 0);
+  const totalSpent = loggedTotal + bookedTotal;
+
   const budgetAmount = budgetQuery.data?.amount_aed ?? 0;
   const percentUsed = budgetAmount > 0 ? Math.round((totalSpent / budgetAmount) * 100) : 0;
   const alertLevel = budgetQuery.data ? getBudgetAlertLevel(percentUsed) : 'ok';
   const alertCopy = ALERT_COPY[alertLevel];
+  const remaining = budgetAmount - totalSpent;
 
   const trip = tripQuery.data;
   const progress = trip
@@ -164,16 +210,22 @@ export default function ExpensesPage() {
     ? computeBurnRate(totalSpent, budgetAmount, progress.daysElapsed, progress.daysRemaining)
     : null;
 
-  const categoryTotals = expenses.reduce<Partial<Record<ExpenseCategory, number>>>((acc, e) => {
-    acc[e.category] = (acc[e.category] ?? 0) + e.amount_aed;
-    return acc;
-  }, {});
+  const categoryTotals: Partial<Record<ExpenseCategory, number>> = {};
+  for (const e of expenses) categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount_aed;
+  for (const item of bookedTravel) categoryTotals[item.category] = (categoryTotals[item.category] ?? 0) + item.amount;
   const sortedCategories = (Object.entries(categoryTotals) as [ExpenseCategory, number][]).sort((a, b) => b[1] - a[1]);
+  const dayGroups = groupByDay(expenses, now);
+
+  function openBudgetEditor() {
+    setBudgetInput(budgetQuery.data ? String(budgetQuery.data.amount_aed) : '');
+    saveBudgetMutation.reset();
+    setIsEditingBudget(true);
+  }
 
   function handleSaveBudget(event: FormEvent) {
     event.preventDefault();
     const amount = Number(budgetInput);
-    if (Number.isFinite(amount) && amount >= 0) {
+    if (budgetInput.trim() !== '' && Number.isFinite(amount) && amount >= 0) {
       saveBudgetMutation.mutate(amount, {
         onSuccess: () => {
           setBudgetInput('');
@@ -190,187 +242,221 @@ export default function ExpensesPage() {
     void budgetQuery.refetch();
   }
 
+  const showBudgetForm = isEditingBudget || !budgetQuery.data;
+
   return (
     <>
       <PrimaryPageHeader />
-      <main className="flex flex-col gap-4 px-4 py-6 pb-10">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-text-secondary">Burn analytics for the rest of your trip.</p>
-          <Link to="/financial-report" className="text-sm text-text-secondary underline hover:text-primary-light">
+      <main className="flex flex-col gap-4 px-4 py-6 pb-36">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold text-text-primary">Finances</h1>
+            <p className="text-sm text-text-secondary">Your Dubai budget, at a glance.</p>
+          </div>
+          <Link to="/financial-report" className="shrink-0 text-sm text-primary-light underline">
             Full Report
           </Link>
         </div>
 
-        <Card title="Allocated Vault">
-        {budgetQuery.data ? (
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative flex items-center justify-center">
-              <VaultRing percentUsed={percentUsed} />
-              <div className="absolute flex flex-col items-center">
-                <span className="text-[10px] uppercase tracking-wide text-text-muted">Allocated Vault</span>
-                <span className="text-xl font-bold text-text-primary">{budgetAmount.toLocaleString()}</span>
-                <span className="text-[10px] text-text-muted">AED</span>
-                <span className="mt-1 rounded-full bg-surface-elevated-2 px-2 py-0.5 text-[10px] font-medium text-text-secondary">
-                  {percentUsed}% Spent
-                </span>
-              </div>
-            </div>
-
-            <div className="grid w-full grid-cols-2 gap-3">
-              <div className="rounded-md border border-border bg-surface-2/70 p-3 text-center">
-                <p className="text-[10px] uppercase tracking-wide text-text-muted">Total Spent</p>
-                <p className="text-lg font-semibold text-text-primary">AED {totalSpent.toLocaleString()}</p>
-              </div>
-              <div className="rounded-md border border-primary-light/30 bg-primary/10 p-3 text-center">
-                <p className="text-[10px] uppercase tracking-wide text-text-muted">Remaining Vault</p>
-                <p className="text-lg font-semibold text-primary-light">AED {(budgetAmount - totalSpent).toLocaleString()}</p>
-              </div>
-            </div>
-
-            {bookedTravel.length > 0 && (
-              <p className="w-full text-xs text-text-muted">
-                Includes booked travel: {bookedTravel.map((item) => `${item.label} AED ${item.amount.toLocaleString()}`).join(' · ')}
-              </p>
-            )}
-
-            {burnRate && (
-              <div className="flex w-full items-center justify-between gap-2 text-sm">
-                <span className="text-text-secondary">Burn Velocity: {Math.round(burnRate.dailyAverageAed)} AED/day</span>
-                <span className={burnRate.willBudgetLast ? 'text-success' : 'text-error'}>
-                  {burnRate.willBudgetLast ? 'On pace' : 'Running short'}
-                </span>
-              </div>
-            )}
-
-            {alertCopy && (
-              <p role="alert" className={clsx('w-full text-sm', alertCopy.className)}>
-                {alertCopy.text}
-              </p>
-            )}
-
-            <SecondaryButton type="button" onClick={() => setIsEditingBudget((v) => !v)} className="self-start">
-              {isEditingBudget ? 'Cancel' : 'Edit Budget'}
-            </SecondaryButton>
-          </div>
-        ) : (
-          <p className="text-sm text-text-secondary">No budget set yet — set one below to unlock burn-rate tracking.</p>
-        )}
-
-        {(isEditingBudget || !budgetQuery.data) && (
-          <form onSubmit={handleSaveBudget} className="flex gap-2">
-            <label htmlFor="budget-amount" className="sr-only">
-              Budget amount (AED)
-            </label>
-            <input
-              id="budget-amount"
-              type="number"
-              min={0}
-              value={budgetInput}
-              onChange={(e) => setBudgetInput(e.target.value)}
-              placeholder="10000"
-              className="min-h-11 flex-1 rounded-sm border border-border bg-surface-2 px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-border-active focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            <PrimaryButton type="submit">Save</PrimaryButton>
-          </form>
-        )}
-      </Card>
-
-      {sortedCategories.length > 0 && (
-        <Card title="Category Allocation">
-          <ul className="flex flex-col gap-3">
-            {sortedCategories.map(([category, amount]) => {
-              const Icon = CATEGORY_ICONS[category];
-              const share = totalSpent > 0 ? Math.round((amount / totalSpent) * 100) : 0;
-              return (
-                <li key={category} className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="inline-flex items-center gap-1.5 text-text-primary">
-                      <Icon size={15} className="text-primary-light" /> {CATEGORY_LABELS[category]}
-                    </span>
-                    <span className="text-text-secondary">
-                      AED {amount.toLocaleString()} · {share}%
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated-2">
-                    <div className="h-full bg-cta" style={{ width: `${share}%` }} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-      )}
-
-      <Card title="Instant AI Log">
-        <div className="flex flex-wrap gap-2">
-          {QUICK_LOG_CATEGORIES.map((category) => {
-            const Icon = CATEGORY_ICONS[category];
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setIsAddingExpense(true)}
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-surface-2/70 px-3 py-1.5 text-xs font-medium text-text-secondary transition-transform active:scale-95"
-              >
-                <Icon size={14} /> {CATEGORY_LABELS[category]}
-              </button>
-            );
-          })}
-        </div>
-        <p className="flex items-center gap-1.5 text-xs text-text-muted">
-          <Zap size={12} className="shrink-0" aria-hidden="true" />
-          Free-text AI logging ("Taxi to Gate Towers 35 AED") arrives in a future update — tap a category to log now.
-        </p>
-      </Card>
-
-      {expensesQuery.isError && (
-        <ErrorState
-          message="Couldn't load your expenses. Check your connection and try again."
-          onRetry={() => void expensesQuery.refetch()}
-        />
-      )}
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Audited Activity Log</h2>
-          {expenses.length > 0 && (
-            <button
-              type="button"
-              onClick={() => downloadExpensesCsv(expenses)}
-              className="inline-flex items-center gap-1 text-xs text-primary-light underline"
-            >
-              <Download size={12} aria-hidden="true" /> Export CSV
-            </button>
-          )}
-        </div>
-        {expenses.length === 0 && <EmptyState message="No expenses logged yet." />}
-        {expenses.map((expense) => {
-          const Icon = CATEGORY_ICONS[expense.category];
-          return (
-            <div key={expense.id} className="flex items-center gap-3 rounded-md border border-border bg-surface-2/50 px-3 py-2">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-elevated-2">
-                <Icon size={15} className="text-primary-light" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm text-text-primary">{expense.description || CATEGORY_LABELS[expense.category]}</p>
-                <p className="text-xs text-text-muted">{expense.expense_date}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-text-primary">-{expense.amount_aed.toLocaleString()} AED</p>
-                <p className="text-xs capitalize text-text-muted">{CATEGORY_LABELS[expense.category]}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
         {isAddingExpense ? (
-          <ChatFlow flow={expenseFlow} onFinished={handleExpenseFinished} />
+          <Card title="Log an expense">
+            <ChatFlow flow={expenseFlow} onFinished={handleExpenseFinished} />
+            <TertiaryButton type="button" onClick={() => setIsAddingExpense(false)} className="self-start">
+              Cancel
+            </TertiaryButton>
+          </Card>
         ) : (
-          <PrimaryButton type="button" onClick={() => setIsAddingExpense(true)} className="self-start">
-            + Log Expense in 20s
+          <PrimaryButton type="button" onClick={() => setIsAddingExpense(true)} className="w-full">
+            <Plus size={18} aria-hidden="true" /> Log Expense
           </PrimaryButton>
         )}
+
+        <Card title="Budget">
+          {budgetQuery.data ? (
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative flex items-center justify-center">
+                <VaultRing percentUsed={percentUsed} />
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-[10px] uppercase tracking-wide text-text-muted">Budget</span>
+                  <span className="text-xl font-bold text-text-primary">{budgetAmount.toLocaleString()}</span>
+                  <span className="text-[10px] text-text-muted">AED</span>
+                  <span className="mt-1 rounded-full bg-surface-elevated-2 px-2 py-0.5 text-[10px] font-medium text-text-secondary">
+                    {percentUsed}% Spent
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid w-full grid-cols-2 gap-3">
+                <StatTile label="Total Spent" value={`AED ${totalSpent.toLocaleString()}`} />
+                <StatTile
+                  label={remaining < 0 ? 'Over Budget' : 'Remaining'}
+                  value={`AED ${Math.abs(remaining).toLocaleString()}`}
+                  tone={remaining < 0 ? 'danger' : 'accent'}
+                />
+              </div>
+
+              {burnRate && (
+                <div className="flex w-full items-center justify-between gap-2 text-sm">
+                  <span className="text-text-secondary">Spending {Math.round(burnRate.dailyAverageAed)} AED/day</span>
+                  <span className={burnRate.willBudgetLast ? 'text-success' : 'text-error'}>
+                    {burnRate.willBudgetLast ? 'On pace' : 'Running short'}
+                  </span>
+                </div>
+              )}
+
+              {alertCopy && (
+                <p role="alert" className={clsx('w-full text-sm', alertCopy.className)}>
+                  {alertCopy.text}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-text-secondary">Set a total budget in AED to track how much you have left.</p>
+          )}
+
+          {showBudgetForm ? (
+            <form onSubmit={handleSaveBudget} className="flex flex-col gap-2">
+              <label htmlFor="budget-amount" className="text-xs text-text-secondary">
+                Budget amount (AED)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="budget-amount"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(e.target.value)}
+                  placeholder="10000"
+                  className="min-h-11 flex-1 rounded-sm border border-border bg-surface-2 px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-border-active focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <PrimaryButton type="submit" disabled={saveBudgetMutation.isPending}>
+                  {saveBudgetMutation.isPending ? 'Saving…' : 'Save'}
+                </PrimaryButton>
+                {budgetQuery.data && (
+                  <SecondaryButton type="button" onClick={() => setIsEditingBudget(false)}>
+                    Cancel
+                  </SecondaryButton>
+                )}
+              </div>
+              {saveBudgetMutation.isError && (
+                <p role="alert" className="text-sm text-error">
+                  Couldn't save your budget. Check your connection and try again.
+                </p>
+              )}
+            </form>
+          ) : (
+            <SecondaryButton type="button" onClick={openBudgetEditor} className="w-full">
+              Edit Budget
+            </SecondaryButton>
+          )}
+        </Card>
+
+        {sortedCategories.length > 0 && (
+          <Card title="Where it went">
+            <ul className="flex flex-col gap-3">
+              {sortedCategories.map(([category, amount]) => {
+                const Icon = CATEGORY_ICONS[category];
+                const share = totalSpent > 0 ? Math.round((amount / totalSpent) * 100) : 0;
+                return (
+                  <li key={category} className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="inline-flex items-center gap-1.5 text-text-primary">
+                        <Icon size={15} className="text-primary-light" aria-hidden="true" /> {CATEGORY_LABELS[category]}
+                      </span>
+                      <span className="text-text-secondary">
+                        AED {amount.toLocaleString()} · {share}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated-2">
+                      <div className="h-full bg-cta" style={{ width: `${share}%` }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
+
+        {bookedTravel.length > 0 && (
+          <Card title="Booked travel">
+            <ul className="flex flex-col gap-2">
+              {bookedTravel.map((item) => {
+                const Icon = CATEGORY_ICONS[item.category];
+                return (
+                  <li key={item.category} className="flex items-center gap-3 rounded-md border border-border bg-surface-2/50 px-3 py-2">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-elevated-2">
+                      <Icon size={15} className="text-primary-light" aria-hidden="true" />
+                    </span>
+                    <span className="flex-1 text-sm text-text-primary">{item.label}</span>
+                    <span className="text-sm font-semibold text-text-primary">AED {item.amount.toLocaleString()}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="text-xs text-text-muted">Counted in your budget automatically. Edit these on the Travel page.</p>
+          </Card>
+        )}
+
+        {expensesQuery.isError && (
+          <ErrorState
+            message="Couldn't load your expenses. Check your connection and try again."
+            onRetry={() => void expensesQuery.refetch()}
+          />
+        )}
+
+        <section aria-labelledby="activity-heading" className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 id="activity-heading" className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Recent activity
+            </h2>
+            {expenses.length > 0 && (
+              <button
+                type="button"
+                onClick={() => downloadExpensesCsv(expenses)}
+                className="inline-flex min-h-9 items-center gap-1 text-xs text-primary-light underline"
+              >
+                <Download size={12} aria-hidden="true" /> Export CSV
+              </button>
+            )}
+          </div>
+
+          {expensesQuery.isLoading && <p role="status" className="text-sm text-text-secondary">Loading expenses…</p>}
+
+          {!expensesQuery.isLoading && !expensesQuery.isError && expenses.length === 0 && (
+            <EmptyState
+              message="No expenses yet. Log your first one — it takes about 20 seconds."
+              action={
+                !isAddingExpense && (
+                  <SecondaryButton type="button" onClick={() => setIsAddingExpense(true)}>
+                    Start logging
+                  </SecondaryButton>
+                )
+              }
+            />
+          )}
+
+          {dayGroups.map((group) => (
+            <div key={group.label} className="flex flex-col gap-2">
+              <h3 className="text-xs font-medium text-text-muted">{group.label}</h3>
+              {group.items.map((expense) => {
+                const Icon = CATEGORY_ICONS[expense.category];
+                return (
+                  <div key={expense.id} className="flex items-center gap-3 rounded-md border border-border bg-surface-2/50 px-3 py-2.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-elevated-2">
+                      <Icon size={16} className="text-primary-light" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-text-primary">{expense.description || CATEGORY_LABELS[expense.category]}</p>
+                      <p className="text-xs text-text-muted">{CATEGORY_LABELS[expense.category]}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-semibold text-text-primary">-{expense.amount_aed.toLocaleString()} AED</p>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </section>
       </main>
     </>
   );
