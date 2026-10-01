@@ -1,4 +1,5 @@
 import { ErrorState } from '@/components/ErrorState';
+import { PageSkeleton } from '@/components/Skeleton';
 import { SecondaryPageHeader } from '@/components/SecondaryPageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { useApplications, useSignedPhotoUrls } from '@/domains/applications/api';
@@ -21,9 +22,7 @@ export default function PhotoGalleryPage() {
     return (
       <>
         {header}
-        <main className="px-4 py-6">
-          <p role="status">Loading…</p>
-        </main>
+        <PageSkeleton variant="list" />
       </>
     );
   }

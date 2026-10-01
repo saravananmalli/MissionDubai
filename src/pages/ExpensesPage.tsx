@@ -1,20 +1,8 @@
 import { useState, type FormEvent } from 'react';
+import { PageSkeleton, SkeletonList } from '@/components/Skeleton';
 import { Link, useSearchParams } from 'react-router-dom';
 import { clsx } from 'clsx';
-import {
-  Car,
-  CircleDollarSign,
-  Download,
-  Plus,
-  Home,
-  Plane,
-  ShieldCheck,
-  ShoppingBag,
-  Shirt,
-  Ticket,
-  Utensils,
-  type LucideIcon,
-} from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 import { ChatFlow } from '@/chat-flow';
 import { Card } from '@/components/Card';
 import { ErrorState } from '@/components/ErrorState';
@@ -24,34 +12,11 @@ import { PrimaryButton, SecondaryButton, TertiaryButton } from '@/components/But
 import { useCurrentTrip } from '@/hooks/useCurrentTrip';
 import { useTravelSummary } from '@/domains/travel/api';
 import { useBudget, useExpenses, useSaveBudget, type Expense } from '@/domains/expenses/api';
+import { CATEGORY_ICONS, CATEGORY_LABELS } from '@/domains/expenses/categories';
 import { expenseFlow } from '@/domains/expenses/flowConfig';
 import { computeBurnRate, getBudgetAlertLevel } from '@/domains/expenses/utils';
 import { computeJourneyProgress } from '@/domains/analytics/utils';
 import type { ExpenseCategory } from '@/lib/database.types';
-
-const CATEGORY_ICONS: Record<ExpenseCategory, LucideIcon> = {
-  meals: Utensils,
-  transport: Car,
-  clothes: Shirt,
-  shopping: ShoppingBag,
-  activities: Ticket,
-  pg_rent: Home,
-  flight: Plane,
-  visa: ShieldCheck,
-  other: CircleDollarSign,
-};
-
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  meals: 'Meals',
-  transport: 'Transport',
-  clothes: 'Clothes',
-  shopping: 'Shopping',
-  activities: 'Activities',
-  pg_rent: 'PG Rent',
-  flight: 'Flight',
-  visa: 'Visa',
-  other: 'Other',
-};
 
 const ALERT_COPY: Record<string, { text: string; className: string }> = {
   warning: { text: "You've used 80% of your budget.", className: 'text-warning' },
@@ -166,9 +131,7 @@ export default function ExpensesPage() {
     return (
       <>
         <PrimaryPageHeader />
-        <main className="px-4 py-6">
-          <p role="status">Loading…</p>
-        </main>
+        <PageSkeleton variant="dashboard" />
       </>
     );
   }
@@ -428,7 +391,12 @@ export default function ExpensesPage() {
             )}
           </div>
 
-          {expensesQuery.isLoading && <p role="status" className="text-sm text-text-secondary">Loading expenses…</p>}
+          {expensesQuery.isLoading && (
+            <div role="status" aria-busy="true">
+              <span className="sr-only">Loading expenses…</span>
+              <SkeletonList rows={4} />
+            </div>
+          )}
 
           {!expensesQuery.isLoading && !expensesQuery.isError && expenses.length === 0 && (
             <EmptyState

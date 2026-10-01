@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { Link } from 'react-router-dom';
 import { ChatFlow } from '@/chat-flow';
 import { Card } from '@/components/Card';
@@ -23,9 +24,7 @@ export default function TravelPage() {
     return (
       <>
         {header}
-        <main className="px-4 py-6">
-          <p role="status">Loading…</p>
-        </main>
+        <PageSkeleton variant="dashboard" />
       </>
     );
   }

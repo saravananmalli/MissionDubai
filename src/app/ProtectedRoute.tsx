@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/app/auth-context';
+import { PageSkeleton } from '@/components/Skeleton';
 
 /** Holds the app until the silent personal sign-in has produced a session; offers a retry if it fails. */
 export function ProtectedRoute() {
@@ -7,8 +8,8 @@ export function ProtectedRoute() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center" role="status" aria-live="polite">
-        Loading…
+      <div className="min-h-screen">
+        <PageSkeleton label="Signing you in" />
       </div>
     );
   }

@@ -1,4 +1,5 @@
 import '@fontsource/manrope/700.css';
+import { PageSkeleton } from '@/components/Skeleton';
 import '@fontsource/manrope/800.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import '@fontsource/plus-jakarta-sans/800.css';
@@ -58,9 +59,7 @@ export default function AiHomePage() {
 
   if (journeyQuery.isLoading) {
     return (
-      <main className="px-4 py-6">
-        <p role="status">Loading…</p>
-      </main>
+      <PageSkeleton variant="dashboard" />
     );
   }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, BarChart3, Calendar, Camera, Send } from 'lucide-react';
 import { ChatFlow } from '@/chat-flow';
@@ -30,9 +31,7 @@ export default function ApplicationsPage() {
     return (
       <>
         <PrimaryPageHeader />
-        <main className="px-4 py-6">
-          <p role="status">Loading…</p>
-        </main>
+        <PageSkeleton variant="list" />
       </>
     );
   }

@@ -43,7 +43,9 @@ describe('AgentsHubPage', () => {
   it('shows a loading state', () => {
     mockedUseJourneyState.mockReturnValue(mockResult({ isLoading: true }));
     renderPage();
-    expect(screen.getByRole('status')).toHaveTextContent('Loading…');
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-busy', 'true');
+    expect(status).toHaveTextContent('Loading page…');
   });
 
   it('shows an error state with a working retry', () => {

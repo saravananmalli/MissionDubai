@@ -29,8 +29,8 @@ test.describe('expenses + budget (mock backend)', () => {
     await expect(page.getByText("You've used 80% of your budget.")).toBeVisible();
 
     await page.goto('/financial-report');
-    await expect(page.getByRole('heading', { name: 'Expense Categories' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Burn Rate' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Spend by category' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Trip budget' })).toBeVisible();
   });
 });
 

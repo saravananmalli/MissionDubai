@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { Link } from 'react-router-dom';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
@@ -30,9 +31,7 @@ export default function InterviewCalendarPage() {
     return (
       <>
         {header}
-        <main className="px-4 py-6">
-          <p role="status">Loading…</p>
-        </main>
+        <PageSkeleton variant="list" />
       </>
     );
   }

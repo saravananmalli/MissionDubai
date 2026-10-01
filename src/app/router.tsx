@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '@/app/AppShell';
 import { ProtectedRoute } from '@/app/ProtectedRoute';
+import { PageSkeleton } from '@/components/Skeleton';
 
 // Route-level code splitting: Recharts (Financial Report) and react-day-picker
 // (Interview Calendar) are large enough on their own to be worth keeping out
@@ -18,16 +19,13 @@ const InterviewCalendarPage = lazy(() => import('@/pages/InterviewCalendarPage')
 const InterviewDetailsPage = lazy(() => import('@/pages/InterviewDetailsPage'));
 const ExpensesPage = lazy(() => import('@/pages/ExpensesPage'));
 const FinancialReportPage = lazy(() => import('@/pages/FinancialReportPage'));
+const OverallAnalyticsPage = lazy(() => import('@/pages/OverallAnalyticsPage'));
 const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'));
 
 function withSuspense(element: ReactNode) {
   return (
     <Suspense
-      fallback={
-        <main className="px-4 py-6">
-          <p role="status">Loading…</p>
-        </main>
-      }
+      fallback={<PageSkeleton />}
     >
       {element}
     </Suspense>
@@ -52,6 +50,7 @@ export const router = createBrowserRouter([
           { path: '/interviews/:interviewId', element: withSuspense(<InterviewDetailsPage />) },
           { path: '/expenses', element: withSuspense(<ExpensesPage />) },
           { path: '/financial-report', element: withSuspense(<FinancialReportPage />) },
+          { path: '/overall-analytics', element: withSuspense(<OverallAnalyticsPage />) },
           { path: '/analytics', element: withSuspense(<AnalyticsPage />) },
         ],
       },

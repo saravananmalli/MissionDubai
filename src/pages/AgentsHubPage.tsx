@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { Bot, Mic } from 'lucide-react';
 import { useAuth } from '@/app/auth-context';
 import { AppHeader } from '@/components/AppHeader';
@@ -49,9 +50,7 @@ export default function AgentsHubPage() {
     return (
       <>
         {header}
-        <main className="px-4 py-6">
-          <p role="status">Loading…</p>
-        </main>
+        <PageSkeleton variant="dashboard" />
       </>
     );
   }
